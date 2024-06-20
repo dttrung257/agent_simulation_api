@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  api:
+    container_name: agent_simulation_api
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "9999:9999"
+    networks:
+      - agent_simulation_net
+    volumes:
+      - ./build/libs/agent_simulation_api-0.0.1-SNAPSHOT.jar:/app.jar
+
+networks:
+  agent_simulation_net:
+    driver: bridge
