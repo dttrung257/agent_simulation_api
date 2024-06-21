@@ -1,0 +1,8 @@
+spring:
+  profiles:
+    active: local
+  application:
+    name: agent-simulation-api
+  threads:
+    virtual:
+      enabled: true

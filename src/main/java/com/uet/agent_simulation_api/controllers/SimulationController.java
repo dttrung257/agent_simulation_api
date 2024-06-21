@@ -16,6 +16,6 @@ public class SimulationController {
 
     @GetMapping
     public void getSimulation() {
-        simulationService.startSimulation();
+        simulationService.run();
     }
 }

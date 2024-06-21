@@ -5,13 +5,25 @@ services:
     container_name: agent_simulation_api
     build:
       context: .
-      dockerfile: ./docker/Dockerfile
+      dockerfile: docker/api/Dockerfile
     ports:
       - "9999:9999"
     networks:
       - agent_simulation_net
     volumes:
       - ./build/libs/agent_simulation_api-0.0.1-SNAPSHOT.jar:/app.jar
+#    depends_on:
+#      - gama_server
+
+#  gama_server:
+#    container_name: agent_simulation_gama_server
+#    build:
+#      context: .
+#      dockerfile: docker/gama_server/Dockerfile
+#    ports:
+#      - "6868:6868"
+#    networks:
+#      - agent_simulation_net
 
 networks:
   agent_simulation_net:
