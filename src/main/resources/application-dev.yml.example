@@ -6,3 +6,7 @@ logging:
     level: INFO
   file:
     path: storage/logs
+
+gama:
+  path:
+    shell: /opt/gama-platform/headless/gama-headless.sh

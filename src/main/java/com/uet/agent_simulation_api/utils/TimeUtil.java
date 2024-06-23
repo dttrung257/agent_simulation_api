@@ -1,11 +1,9 @@
 package com.uet.agent_simulation_api.utils;
 
-import com.uet.agent_simulation_api.constant.Const;
 import com.uet.agent_simulation_api.constant.TimeConst;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -48,8 +46,8 @@ public class TimeUtil {
      * @return String of current time in specific format and specific time zone.
      */
     public String getCurrentTimeString(String format, String zoneId) {
-        ZonedDateTime now = Instant.now().atZone(ZoneId.of(zoneId));
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+        final ZonedDateTime now = Instant.now().atZone(ZoneId.of(zoneId));
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
 
         return now.format(formatter);
     }

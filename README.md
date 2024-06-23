@@ -15,7 +15,7 @@ java --version
 exit
 ```
 
-### MacOS
+#### MacOS
 ```
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 brew install openjdk@21
@@ -31,6 +31,16 @@ cp application-dev.yml.example application-dev.yml
 cp application-local.yml.example application-local.yml
 ```
 Config base on your environment
+
+### Active environment
+Go to src/main/resources/application.yml and change the active profile to local, dev or ...
+```
+Example change environment to local
+
+spring:
+  profiles:
+    active: local
+```
 
 ## Run manually
 ```
