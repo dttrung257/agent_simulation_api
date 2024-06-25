@@ -1,6 +1,7 @@
 package com.uet.agent_simulation_api.utils;
 
 import com.uet.agent_simulation_api.constant.TimeConst;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -10,6 +11,13 @@ import java.time.format.DateTimeFormatter;
 
 @Service
 public class TimeUtil {
+    @Value("${app.timezone}")
+    private String timezone;
+
+    private String getTimezone() {
+        return timezone.equalsIgnoreCase(TimeConst.UTC_TIME_ZONE) ? TimeConst.UTC_TIME_ZONE : TimeConst.DEFAULT_TIME_ZONE;
+    }
+
     /**
      * This method is used to get current time in milliseconds.
      *
@@ -25,7 +33,7 @@ public class TimeUtil {
      * @return String of current time in default format and default time zone.
      */
     public String getCurrentTimeString() {
-        return getCurrentTimeString(TimeConst.DEFAULT_DATE_TIME_FORMAT, TimeConst.DEFAULT_TIME_ZONE);
+        return getCurrentTimeString(TimeConst.DEFAULT_DATE_TIME_FORMAT, getTimezone());
     }
 
     /**
@@ -35,7 +43,7 @@ public class TimeUtil {
      * @return String of current time in specific format.
      */
     public String getCurrentTimeString(String format) {
-        return getCurrentTimeString(format, TimeConst.DEFAULT_TIME_ZONE);
+        return getCurrentTimeString(format, getTimezone());
     }
 
     /**

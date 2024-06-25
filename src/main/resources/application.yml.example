@@ -6,3 +6,6 @@ spring:
   threads:
     virtual:
       enabled: true
+
+app:
+  timezone: UTC+7

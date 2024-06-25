@@ -1,4 +1,4 @@
-package com.uet.agent_simulation_api.commands;
+package com.uet.agent_simulation_api.commands.builders;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -29,6 +29,15 @@ public class GamaCommandBuilder implements IGamaCommandBuilder {
         }
 
         return joiner.toString();
+    }
+
+    @Override
+    public String createXmlFile(String experimentName, String pathToGamlFile, String pathToOutputXml) {
+        return this.build(
+                env.getProperty("gama.path.shell"),
+                null,
+                List.of("-xml", experimentName, pathToGamlFile, pathToOutputXml)
+        );
     }
 
     @Override

@@ -25,11 +25,8 @@ public class Controller {
 
     @GetMapping
     public ResponseEntity<SuccessResponse> health() {
-//        return ResponseHandler.respondSuccess(
-//                "Server is running on port " + port + " with profiles: " + profile + ", thread: " + Thread.currentThread()
-//        );
         return ResponseHandler.respondSuccess(
-                env.getProperty("gama.path.shell")
+                "Server is running on port " + port + " with profiles: " + profile + ", thread: " + Thread.currentThread()
         );
     }
 }

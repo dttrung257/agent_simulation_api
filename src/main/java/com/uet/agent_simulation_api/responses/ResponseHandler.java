@@ -1,6 +1,7 @@
 package com.uet.agent_simulation_api.responses;
 
-import com.uet.agent_simulation_api.constant.Const;
+import com.uet.agent_simulation_api.constant.AppConst;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,17 @@ public class ResponseHandler {
      * @return ResponseEntity<SuccessResponse>
      */
     public ResponseEntity<SuccessResponse> respondSuccess(Object data) {
-        return ResponseEntity.ok(new SuccessResponse(Const.SUCCESS, data));
+        return ResponseEntity.ok(new SuccessResponse(AppConst.SUCCESS, HttpStatus.OK.value(), data));
+    }
+
+    /**
+     * This method is used to response success for this API.
+     *
+     * @param httpStatus - HttpStatus
+     * @param data - Object
+     * @return ResponseEntity<SuccessResponse>
+     */
+    public ResponseEntity<SuccessResponse> respondSuccess(HttpStatus httpStatus, Object data) {
+        return ResponseEntity.ok(new SuccessResponse(AppConst.SUCCESS, httpStatus.value(), data));
     }
 }
