@@ -9,11 +9,19 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Time utility class.
+ */
 @Service
 public class TimeUtil {
     @Value("${app.timezone}")
     private String timezone;
 
+    /**
+     * This method is used to get time zone.
+     *
+     * @return String - Time zone.
+     */
     private String getTimezone() {
         return timezone.equalsIgnoreCase(TimeConst.UTC_TIME_ZONE) ? TimeConst.UTC_TIME_ZONE : TimeConst.DEFAULT_TIME_ZONE;
     }
@@ -21,7 +29,7 @@ public class TimeUtil {
     /**
      * This method is used to get current time in milliseconds.
      *
-     * @return current time in milliseconds
+     * @return long - Current time in milliseconds.
      */
     public long getCurrentTime() {
         return System.currentTimeMillis();
@@ -30,7 +38,7 @@ public class TimeUtil {
     /**
      * This method is used to get current time string in default format and default time zone.
      *
-     * @return String of current time in default format and default time zone.
+     * @return String - Current time in default format and default time zone.
      */
     public String getCurrentTimeString() {
         return getCurrentTimeString(TimeConst.DEFAULT_DATE_TIME_FORMAT, getTimezone());
@@ -39,8 +47,9 @@ public class TimeUtil {
     /**
      * This method is used to get current time string in specific format.
      *
-     * @param format - specific format
-     * @return String of current time in specific format.
+     * @param format String - specific format
+     *
+     * @return String - Current time in specific format.
      */
     public String getCurrentTimeString(String format) {
         return getCurrentTimeString(format, getTimezone());
@@ -49,9 +58,10 @@ public class TimeUtil {
     /**
      * This method is used to get current time string in specific format and specific time zone.
      *
-     * @param format - specific format
-     * @param zoneId - specific time zone
-     * @return String of current time in specific format and specific time zone.
+     * @param format String - specific format
+     * @param zoneId String - specific time zone
+     *
+     * @return String - Current time in specific format and specific time zone.
      */
     public String getCurrentTimeString(String format, String zoneId) {
         final ZonedDateTime now = Instant.now().atZone(ZoneId.of(zoneId));

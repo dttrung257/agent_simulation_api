@@ -3,7 +3,7 @@ package com.uet.agent_simulation_api.services.impl;
 import com.uet.agent_simulation_api.commands.builders.IGamaCommandBuilder;
 import com.uet.agent_simulation_api.commands.executors.IGamaCommandExecutor;
 import com.uet.agent_simulation_api.constant.SimulationConst;
-import com.uet.agent_simulation_api.requests.CreateSimulationRequest;
+import com.uet.agent_simulation_api.requests.simulation.CreateSimulationRequest;
 import com.uet.agent_simulation_api.services.ISimulationService;
 import com.uet.agent_simulation_api.utils.TimeUtil;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +15,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Map;
 
+/**
+ * This service is used to handle simulation logic.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j

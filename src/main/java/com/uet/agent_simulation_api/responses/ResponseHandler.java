@@ -10,7 +10,8 @@ public class ResponseHandler {
     /**
      * This method is used to response success for this API.
      *
-     * @param data - Object
+     * @param data Object
+     *
      * @return ResponseEntity<SuccessResponse>
      */
     public ResponseEntity<SuccessResponse> respondSuccess(Object data) {
@@ -20,8 +21,9 @@ public class ResponseHandler {
     /**
      * This method is used to response success for this API.
      *
-     * @param httpStatus - HttpStatus
-     * @param data - Object
+     * @param httpStatus HttpStatus
+     * @param data Object
+     *
      * @return ResponseEntity<SuccessResponse>
      */
     public ResponseEntity<SuccessResponse> respondSuccess(HttpStatus httpStatus, Object data) {

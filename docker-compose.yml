@@ -10,11 +10,12 @@ services:
       - "9999:9999"
     networks:
       - agent_simulation_net
-    volumes:
-      - ./build/libs/agent_simulation_api-0.0.1-SNAPSHOT.jar:/app.jar
-#    depends_on:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - db
 #      - gama_server
-
+#
 #  gama_server:
 #    container_name: agent_simulation_gama_server
 #    build:
@@ -25,6 +26,24 @@ services:
 #    networks:
 #      - agent_simulation_net
 
+  db:
+    container_name: agent_simulation_db
+    image: mysql:8.4
+    ports:
+      - "10306:3306"
+    networks:
+      - agent_simulation_net
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: agent_simulation
+      MYSQL_USER: agent_simulation_user
+      MYSQL_PASSWORD: agent_simulation_password
+    volumes:
+      - agent_simulation_data_volume:/var/lib/mysql
+
 networks:
   agent_simulation_net:
     driver: bridge
+
+volumes:
+  agent_simulation_data_volume:

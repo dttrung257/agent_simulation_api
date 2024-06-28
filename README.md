@@ -42,17 +42,16 @@ spring:
     active: local
 ```
 
-## Run manually
+## Run project
 ```
-./gradew build
-java -jar build/libs/agent-simulation-api-0.0.1-SNAPSHOT.jar
+sh scripts/start-project.sh
 ```
 
-## Run with docker
+## Run project manually
 ```
-./gradew build
-docker compose build
-docker compose up -d (docker compose up)
+docker compose up db -d
+./gradlew build
+java -jar build/libs/agent_simulation_api-0.0.1-SNAPSHOT.jar
 ```
 
 ## Log

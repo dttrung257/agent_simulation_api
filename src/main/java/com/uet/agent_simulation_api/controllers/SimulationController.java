@@ -1,6 +1,6 @@
 package com.uet.agent_simulation_api.controllers;
 
-import com.uet.agent_simulation_api.requests.CreateSimulationRequest;
+import com.uet.agent_simulation_api.requests.simulation.CreateSimulationRequest;
 import com.uet.agent_simulation_api.responses.ResponseHandler;
 import com.uet.agent_simulation_api.responses.SuccessResponse;
 import com.uet.agent_simulation_api.services.ISimulationService;

@@ -1,8 +1,11 @@
-package com.uet.agent_simulation_api.requests;
+package com.uet.agent_simulation_api.requests.simulation;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
+/**
+ * Create experiment data request class.
+ */
 public record CreateExperimentDataRequest(
         @NotBlank(message = "GAML file must not be blank") String gamlFile,
         @NotBlank(message = "Experiment name must not be blank") String experimentName,

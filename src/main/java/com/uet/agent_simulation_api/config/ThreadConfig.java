@@ -6,6 +6,9 @@ import org.springframework.context.annotation.Configuration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * This class is used to configure threads.
+ */
 @Configuration
 public class ThreadConfig {
     /*
