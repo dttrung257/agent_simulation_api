@@ -3,7 +3,14 @@ package com.uet.agent_simulation_api.commands.executors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import java.io.*;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 @Service
@@ -16,7 +23,7 @@ public class GamaCommandExecutor implements IGamaCommandExecutor {
     public void execute(String command) {
         virtualThreadExecutor.submit(() -> {
             try {
-                final Process process = (new ProcessBuilder()).command("bash", "-c", command).start();
+                final var process = (new ProcessBuilder()).command("bash", "-c", command).start();
                 this.getCommandOutput(process);
             } catch (Exception e) {
                 log.error("Error while executing command: {}", command, e);
@@ -27,10 +34,10 @@ public class GamaCommandExecutor implements IGamaCommandExecutor {
     @Override
     public void getCommandOutput(Process process) {
         // Output stream
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        final var reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
         // Error stream
-        final BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+        final var errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 
         String line;
         try {
@@ -48,7 +55,7 @@ public class GamaCommandExecutor implements IGamaCommandExecutor {
     }
 
     @Override
-    public void executeLegacy(
+    public CompletableFuture<Void> executeLegacy(
             String createXmlCommand,
             String runLegacyCommand,
             String pathToXmlFile,
@@ -56,8 +63,9 @@ public class GamaCommandExecutor implements IGamaCommandExecutor {
             String experimentName,
             long finalStep
     ) {
-        virtualThreadExecutor.submit(() -> {
+        return CompletableFuture.runAsync(() -> {
             try {
+                // Prepare experiment plan xml file to run legacy command
                 if (createXmlCommand != null) {
                     log.info("Start creating xml file: {}", pathToXmlFile);
                     final Process createXmlProcess = (new ProcessBuilder()).command("bash", "-c", createXmlCommand).start();
@@ -77,18 +85,27 @@ public class GamaCommandExecutor implements IGamaCommandExecutor {
                     log.info("Finish updating experiment plan: {}", pathToXmlFile);
                 }
 
+                // Run legacy command
                 if (runLegacyCommand != null) {
                     log.info("Start running legacy command: {}", runLegacyCommand);
-                    final Process runLegacyProcess = (new ProcessBuilder()).command("bash", "-c", runLegacyCommand).start();
+                    final var runLegacyProcess = (new ProcessBuilder()).command("bash", "-c", runLegacyCommand).start();
                     this.getCommandOutput(runLegacyProcess);
                     log.info("Finish running legacy command: {}", runLegacyCommand);
                 }
             } catch (Exception e) {
                 log.error("Error while executing legacy command: {}", runLegacyCommand, e);
             }
-        });
+        }, virtualThreadExecutor);
     }
 
+    /**
+     * This method is used to update the experiment plan file.
+     *
+     * @param pathToXmlFile String
+     * @param experimentId int
+     * @param experimentName String
+     * @param finalStep long
+     */
     private void updateExperimentPlan(
             String pathToXmlFile,
             int experimentId,
@@ -97,7 +114,7 @@ public class GamaCommandExecutor implements IGamaCommandExecutor {
     ) {
         try {
             // Read the file content into a string
-            final StringBuilder content = new StringBuilder();
+            final var content = new StringBuilder();
             try (final BufferedReader reader = new BufferedReader(new FileReader(pathToXmlFile))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -108,7 +125,7 @@ public class GamaCommandExecutor implements IGamaCommandExecutor {
             }
 
             // Convert the content to a string
-            String xmlContent = content.toString();
+            var xmlContent = content.toString();
 
             // Replace the first occurrence of each attribute
             xmlContent = xmlContent.replaceFirst("experiment=\"[^\"]*\"", "experiment=\"" + experimentName + "\"");

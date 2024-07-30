@@ -33,7 +33,7 @@ public class S3Config {
      */
     @Bean
     public S3Client s3client() {
-        final AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(accessKey, secretKey);
+        final var awsCredentials = AwsBasicCredentials.create(accessKey, secretKey);
 
         return S3Client.builder()
                 .region(Region.of(region))
@@ -48,7 +48,7 @@ public class S3Config {
      */
     @Bean
     public S3TransferManager s3TransferManager() {
-        final S3AsyncClient s3AsyncClient = S3AsyncClient.builder()
+        final var s3AsyncClient = S3AsyncClient.builder()
                 .region(Region.of(region))
                 .credentialsProvider(() -> AwsBasicCredentials.create(accessKey, secretKey))
                 .build();

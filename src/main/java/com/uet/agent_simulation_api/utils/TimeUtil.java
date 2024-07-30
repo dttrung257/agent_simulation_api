@@ -36,6 +36,15 @@ public class TimeUtil {
     }
 
     /**
+     * This method is used to get current time in nanoseconds.
+     *
+     * @return long - Current time in nanoseconds.
+     */
+    public long getCurrentTimeNano() {
+        return System.nanoTime();
+    }
+
+    /**
      * This method is used to get current time string in default format and default time zone.
      *
      * @return String - Current time in default format and default time zone.

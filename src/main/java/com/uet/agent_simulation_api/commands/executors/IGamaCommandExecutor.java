@@ -1,5 +1,7 @@
 package com.uet.agent_simulation_api.commands.executors;
 
+import java.util.concurrent.CompletableFuture;
+
 public interface IGamaCommandExecutor extends ICommandExecutor {
     /**
      * This method is used to execute the legacy mode gama headless.
@@ -10,6 +12,7 @@ public interface IGamaCommandExecutor extends ICommandExecutor {
      * @param experimentId - id of the experiment
      * @param experimentName - name of the experiment
      * @param finalStep - final step of the experiment
+     * @return CompletableFuture<Void>
      */
-    void executeLegacy(String createXmlCommand, String runLegacyCommand, String pathToXmlFile, int experimentId, String experimentName, long finalStep);
+    CompletableFuture<Void> executeLegacy(String createXmlCommand, String runLegacyCommand, String pathToXmlFile, int experimentId, String experimentName, long finalStep);
 }

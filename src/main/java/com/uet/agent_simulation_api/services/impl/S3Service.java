@@ -13,15 +13,10 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.S3Object;
-import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable;
 import software.amazon.awssdk.transfer.s3.S3TransferManager;
-import software.amazon.awssdk.transfer.s3.model.CompletedDirectoryUpload;
-import software.amazon.awssdk.transfer.s3.model.DirectoryUpload;
 import software.amazon.awssdk.transfer.s3.model.UploadDirectoryRequest;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 /*
@@ -42,7 +37,7 @@ public class S3Service implements IS3Service {
     public void uploadFile(String objectKey, String localPath) {
         virtualThreadExecutor.submit(() -> {
             try {
-                final PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                final var putObjectRequest = PutObjectRequest.builder()
                         .bucket(bucketName)
                         .key(objectKey)
                         .acl(ObjectCannedACL.PUBLIC_READ)
@@ -59,7 +54,7 @@ public class S3Service implements IS3Service {
     public void uploadFile(String objectKey, String localPath, ObjectCannedACL acl) {
         virtualThreadExecutor.submit(() -> {
             try {
-                final PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                final var putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(objectKey)
                     .acl(acl)
@@ -72,6 +67,26 @@ public class S3Service implements IS3Service {
         });
     }
 
+    @Override
+    public void uploadDirectory(String localPath, String s3Directory) {
+        try {
+            this.clear(s3Directory);
+
+            final var directoryUpload = transferManager.uploadDirectory(UploadDirectoryRequest.builder()
+                    .source(Path.of(localPath))
+                    .bucket(bucketName)
+                    .s3Prefix(s3Directory)
+                    .build());
+
+            final var completedDirectoryUpload = directoryUpload.completionFuture().join();
+
+            completedDirectoryUpload.failedTransfers()
+                    .forEach(fail -> log.warn("Object [{}] failed to transfer", fail.toString()));
+        } catch (Exception e) {
+            log.error("Error uploading directory to S3", e);
+        }
+    }
+
     /**
      * This method is used to delete objects in specific S3 directory.
      *
@@ -81,22 +96,22 @@ public class S3Service implements IS3Service {
         try {
             s3Directory = s3Directory.endsWith("/") ? s3Directory : s3Directory + "/";
 
-            final ListObjectsV2Request request = ListObjectsV2Request.builder().bucket(bucketName).prefix(s3Directory).build();
-            final ListObjectsV2Iterable list = s3Client.listObjectsV2Paginator(request);
+            final var request = ListObjectsV2Request.builder().bucket(bucketName).prefix(s3Directory).build();
+            final var list = s3Client.listObjectsV2Paginator(request);
 
             for (ListObjectsV2Response response : list) {
-                final List<S3Object> objects = response.contents();
+                final var objects = response.contents();
                 if (objects.isEmpty()) {
                     return;
                 }
 
-                final List<ObjectIdentifier> objectIdentifiers = objects.stream()
+                final var objectIdentifiers = objects.stream()
                         .map(o -> ObjectIdentifier.builder().key(o.key()).build())
                         .toList();
 
-                final Delete del = Delete.builder().objects(objectIdentifiers).build();
+                final var del = Delete.builder().objects(objectIdentifiers).build();
 
-                final DeleteObjectsRequest deleteObjectsRequest = DeleteObjectsRequest.builder()
+                final var deleteObjectsRequest = DeleteObjectsRequest.builder()
                         .bucket(bucketName)
                         .delete(del)
                         .build();
@@ -111,27 +126,5 @@ public class S3Service implements IS3Service {
     @Override
     public void clearDirectory(String s3Directory) {
         virtualThreadExecutor.submit(() -> this.clear(s3Directory));
-    }
-
-    @Override
-    public void uploadDirectory(String localPath, String s3Directory) {
-        virtualThreadExecutor.submit(() -> {
-            try {
-                this.clear(s3Directory);
-
-                final DirectoryUpload directoryUpload = transferManager.uploadDirectory(UploadDirectoryRequest.builder()
-                        .source(Path.of(localPath))
-                        .bucket(bucketName)
-                        .s3Prefix(s3Directory)
-                        .build());
-
-                final CompletedDirectoryUpload completedDirectoryUpload = directoryUpload.completionFuture().join();
-
-                completedDirectoryUpload.failedTransfers()
-                        .forEach(fail -> log.warn("Object [{}] failed to transfer", fail.toString()));
-            } catch (Exception e) {
-                log.error("Error uploading directory to S3", e);
-            }
-        });
     }
 }

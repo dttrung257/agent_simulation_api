@@ -38,6 +38,7 @@ services:
       MYSQL_DATABASE: agent_simulation
       MYSQL_USER: agent_simulation_user
       MYSQL_PASSWORD: agent_simulation_password
+      TZ: Asia/Ho_Chi_Minh
     volumes:
       - agent_simulation_data_volume:/var/lib/mysql
 

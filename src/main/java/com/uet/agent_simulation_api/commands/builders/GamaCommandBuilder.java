@@ -17,7 +17,7 @@ public class GamaCommandBuilder implements IGamaCommandBuilder {
 
     @Override
     public String build(String pathToShell, Map<String, String> options, List<String> args) {
-        final StringJoiner joiner = new StringJoiner(" ");
+        final var joiner = new StringJoiner(" ");
         joiner.add(pathToShell);
 
         if (options != null && !options.isEmpty()) {
