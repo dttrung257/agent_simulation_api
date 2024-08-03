@@ -14,6 +14,7 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       - db
+      - redis
 #      - gama_server
 #
 #  gama_server:
@@ -41,6 +42,14 @@ services:
       TZ: Asia/Ho_Chi_Minh
     volumes:
       - agent_simulation_data_volume:/var/lib/mysql
+
+  redis:
+    container_name: agent_simulation_redis
+    image: redis:7.4
+    ports:
+      - "6379:6379"
+    networks:
+      - agent_simulation_net
 
 networks:
   agent_simulation_net:

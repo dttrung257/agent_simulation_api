@@ -55,14 +55,8 @@ public class GamaCommandExecutor implements IGamaCommandExecutor {
     }
 
     @Override
-    public CompletableFuture<Void> executeLegacy(
-            String createXmlCommand,
-            String runLegacyCommand,
-            String pathToXmlFile,
-            int experimentId,
-            String experimentName,
-            long finalStep
-    ) {
+    public CompletableFuture<Void> executeLegacy(String createXmlCommand, String runLegacyCommand, String pathToXmlFile,
+        int experimentId, String experimentName, long finalStep) {
         return CompletableFuture.runAsync(() -> {
             try {
                 // Prepare experiment plan xml file to run legacy command
@@ -106,12 +100,7 @@ public class GamaCommandExecutor implements IGamaCommandExecutor {
      * @param experimentName String
      * @param finalStep long
      */
-    private void updateExperimentPlan(
-            String pathToXmlFile,
-            int experimentId,
-            String experimentName,
-            long finalStep
-    ) {
+    private void updateExperimentPlan(String pathToXmlFile, int experimentId, String experimentName, long finalStep) {
         try {
             // Read the file content into a string
             final var content = new StringBuilder();

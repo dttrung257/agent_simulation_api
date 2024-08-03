@@ -33,6 +33,10 @@ spring:
     url: jdbc:mysql://host.docker.internal:10306/agent_simulation
     user: agent_simulation_user
     password: agent_simulation_password
+  data:
+    redis:
+      host: <host>
+      port: <port>
 
 aws:
   access-key: <access-key>

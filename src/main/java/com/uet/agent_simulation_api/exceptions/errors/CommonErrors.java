@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 /**
  * This class is used to store common errors.
  */
-public final class CommonError {
+public final class CommonErrors {
     // Internal server error
     public static final ErrorDetails E0001 = new ErrorDetails(HttpStatus.INTERNAL_SERVER_ERROR.value(), "E0001", "Internal Server Error");
 

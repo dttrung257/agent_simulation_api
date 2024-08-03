@@ -38,10 +38,10 @@ public class S3Service implements IS3Service {
         virtualThreadExecutor.submit(() -> {
             try {
                 final var putObjectRequest = PutObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(objectKey)
-                        .acl(ObjectCannedACL.PUBLIC_READ)
-                        .build();
+                    .bucket(bucketName)
+                    .key(objectKey)
+                    .acl(ObjectCannedACL.PUBLIC_READ)
+                    .build();
 
                 s3Client.putObject(putObjectRequest, Path.of(localPath));
             } catch (Exception e) {
@@ -70,13 +70,11 @@ public class S3Service implements IS3Service {
     @Override
     public void uploadDirectory(String localPath, String s3Directory) {
         try {
-            this.clear(s3Directory);
-
             final var directoryUpload = transferManager.uploadDirectory(UploadDirectoryRequest.builder()
-                    .source(Path.of(localPath))
-                    .bucket(bucketName)
-                    .s3Prefix(s3Directory)
-                    .build());
+                .source(Path.of(localPath))
+                .bucket(bucketName)
+                .s3Prefix(s3Directory)
+                .build());
 
             final var completedDirectoryUpload = directoryUpload.completionFuture().join();
 
@@ -92,7 +90,7 @@ public class S3Service implements IS3Service {
      *
      * @param s3Directory String
      */
-    private void clear(String s3Directory) {
+    public void clear(String s3Directory) {
         try {
             s3Directory = s3Directory.endsWith("/") ? s3Directory : s3Directory + "/";
 
@@ -106,15 +104,15 @@ public class S3Service implements IS3Service {
                 }
 
                 final var objectIdentifiers = objects.stream()
-                        .map(o -> ObjectIdentifier.builder().key(o.key()).build())
-                        .toList();
+                    .map(o -> ObjectIdentifier.builder().key(o.key()).build())
+                    .toList();
 
                 final var del = Delete.builder().objects(objectIdentifiers).build();
 
                 final var deleteObjectsRequest = DeleteObjectsRequest.builder()
-                        .bucket(bucketName)
-                        .delete(del)
-                        .build();
+                    .bucket(bucketName)
+                    .delete(del)
+                    .build();
 
                 s3Client.deleteObjects(deleteObjectsRequest);
             }

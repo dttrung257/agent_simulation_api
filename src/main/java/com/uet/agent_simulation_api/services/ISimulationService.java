@@ -12,11 +12,6 @@ public interface ISimulationService {
     void run();
 
     /**
-     * This method is used to clear output of simulation.
-     */
-    void clear();
-
-    /**
      * This method is used to run simulation with a specific request.
      *
      * @param request CreateSimulationRequest

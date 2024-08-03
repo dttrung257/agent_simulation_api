@@ -3,6 +3,7 @@ package com.uet.agent_simulation_api.services.impl;
 import com.uet.agent_simulation_api.commands.builders.IGamaCommandBuilder;
 import com.uet.agent_simulation_api.commands.executors.IGamaCommandExecutor;
 import com.uet.agent_simulation_api.constant.SimulationConst;
+import com.uet.agent_simulation_api.exceptions.simulation.CannotClearOldSimulationOutputException;
 import com.uet.agent_simulation_api.requests.simulation.CreateSimulationRequest;
 import com.uet.agent_simulation_api.services.ISimulationService;
 import com.uet.agent_simulation_api.utils.TimeUtil;
@@ -81,6 +82,51 @@ public class SimulationService implements ISimulationService {
 
     @Override
     public void run(CreateSimulationRequest request) {
+        // Clear old simulation output directories.
+        clearOldLocalResult(request);
+
+        // Run simulation
+        runSimulation(request);
+    }
+
+    /**
+     * This method is used to run simulation.
+     *
+     * @param request CreateSimulationRequest
+     */
+    private void runSimulation(CreateSimulationRequest request) {
+        final var experiments = request.experiments();
+
+        experiments.forEach(experiment -> {
+            // Get experiment data from request.
+            final var experimentId = experiment.id();
+            final var experimentData = experiment.data();
+            final var gamlFile = experimentData.gamlFile();
+            final var experimentName = experimentData.experimentName();
+            final var finalStep = experimentData.finalStep() != null ? experimentData.finalStep() : SimulationConst.DEFAULT_FINAL_STEP;
+            final var gamlFileName = gamlFile.replace(".gaml", "");
+            final var pathToXmlFile = "./storage/xmls/" + experimentId + "_" + gamlFileName + ".xml";
+            final var localOutputDir = "./storage/outputs/" + experimentId + "_" + gamlFileName + "/";
+
+            // Create experiment plan XML file.
+            final var createXmlCommand = gamaCommandBuilder.createXmlFile(
+                experimentName, "/Users/trungdt/Workspaces/uet/gama/pig-farm/models/" + gamlFile, pathToXmlFile
+            );
+
+            // Build command to run experiment.
+            final var runLegacyCommand = gamaCommandBuilder.buildLegacy(null, pathToXmlFile, localOutputDir);
+
+            // Execute legacy command.
+            executeLegacy(createXmlCommand, runLegacyCommand, pathToXmlFile, experimentId, experimentName, finalStep, localOutputDir);
+        });
+    }
+
+    /**
+     * This method is used to clear old simulation output directories.
+     *
+     * @param request CreateSimulationRequest
+     */
+    private void clearOldLocalResult(CreateSimulationRequest request) {
         final var experiments = request.experiments();
         log.info("Start clearing old output directories");
         experiments.forEach(experiment -> {
@@ -94,51 +140,10 @@ public class SimulationService implements ISimulationService {
             try {
                 processBuilder.command("bash", "-c", "rm -rf " + localOutputDir).start();
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new CannotClearOldSimulationOutputException(e.getMessage());
             }
         });
         log.info("Finished clearing old output directories");
-
-        experiments.forEach(experiment -> {
-            // Get experiment data from request
-            final var experimentId = experiment.id();
-            final var experimentData = experiment.data();
-            final var gamlFile = experimentData.gamlFile();
-            final var experimentName = experimentData.experimentName();
-            final var finalStep = experimentData.finalStep() != null ? experimentData.finalStep() : SimulationConst.DEFAULT_FINAL_STEP;
-            final var gamlFileName = gamlFile.replace(".gaml", "");
-            final var pathToXmlFile = "./storage/xmls/" + experimentId + "_" + gamlFileName + ".xml";
-            final var localOutputDir = "./storage/outputs/" + experimentId + "_" + gamlFileName + "/";
-
-            // Build experiment plan XML file
-            final var createXmlCommand = gamaCommandBuilder.createXmlFile(
-                    experimentName,
-                    "/Users/trungdt/Workspaces/uet/gama/pig-farm/models/" + gamlFile,
-                    pathToXmlFile
-            );
-
-            // Build command to run experiment
-            final var runLegacyCommand = gamaCommandBuilder.buildLegacy(
-                    null,
-                    pathToXmlFile,
-                    localOutputDir
-            );
-
-            // Execute legacy command
-            executeLegacy(createXmlCommand, runLegacyCommand, pathToXmlFile, experimentId, experimentName, finalStep, localOutputDir);
-        });
-    }
-
-    /**
-     * This method is used to get output object key.
-     *
-     * @param modelId BigInteger
-     * @param experimentId int
-     * @return String
-     */
-    private String getOutputObjectKey(BigInteger modelId, int experimentId) {
-        final var userId = authService.getCurrentUserId();
-        return String.format("simulation_results/user_%s/model_%s/experiment_%s", userId, modelId, experimentId);
     }
 
     /**
@@ -152,37 +157,28 @@ public class SimulationService implements ISimulationService {
      * @param finalStep long
      * @param localOutputDir String
      */
-    private void executeLegacy(
-            String createXmlCommand,
-            String runLegacyCommand,
-            String pathToXmlFile,
-            int experimentId,
-            String experimentName,
-            long finalStep,
-            String localOutputDir
-    ) {
+    private void executeLegacy(String createXmlCommand, String runLegacyCommand, String pathToXmlFile,
+        int experimentId, String experimentName, long finalStep, String localOutputDir) {
         try {
             virtualThreadExecutor.submit(() -> {
                 // Execute commands
-                final var future = gamaCommandExecutor.executeLegacy(
-                        createXmlCommand,
-                        runLegacyCommand,
-                        pathToXmlFile,
-                        experimentId,
-                        experimentName,
-                        finalStep
-                );
+                final var future = gamaCommandExecutor.executeLegacy(createXmlCommand, runLegacyCommand, pathToXmlFile,
+                    experimentId, experimentName, finalStep);
 
                 future.whenComplete((result, error) -> {
                     if (error != null) {
                         log.error("Error while running simulation", error);
+
+                        clearLocalResource(localOutputDir);
                         return;
                     }
 
                     // If execution is successful, upload output directory to S3
-                    final var outputObjectKey = getOutputObjectKey(BigInteger.ONE, experimentId);
                     log.info("Simulation completed for experiment: {}", experimentId);
-                    s3Service.uploadDirectory(localOutputDir, outputObjectKey);
+
+                    clearOldResultInS3(BigInteger.ONE, experimentId);
+                    uploadResult(BigInteger.ONE, experimentId, localOutputDir);
+                    clearLocalResource(localOutputDir);
                 });
 
                 future.join();
@@ -192,15 +188,57 @@ public class SimulationService implements ISimulationService {
         }
     }
 
-    @Override
-    public void clear() {
+    /**
+     * This method is used to clear local resource.
+     *
+     * @param localOutputDir String
+     */
+    private void clearLocalResource(String localOutputDir) {
+        // Clear old output directory
         final var processBuilder = new ProcessBuilder();
-
         try {
-            processBuilder.command("bash", "-c", "rm -rf /Users/trungdt/Workspaces/uet/gama/pig-farm/includes/output/normal").start();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            processBuilder.command("bash", "-c", "rm -rf " + localOutputDir).start();
+        } catch (Exception e) {
+            throw new CannotClearOldSimulationOutputException(e.getMessage());
         }
+    }
+
+    /**
+     * This method is used to clear old S3 result.
+     *
+     * @param modelId BigInteger
+     * @param experimentId int
+     */
+    private void clearOldResultInS3(BigInteger modelId, int experimentId) {
+        final var outputObjectKey = getOutputObjectKey(modelId, experimentId);
+
+        s3Service.clear(outputObjectKey);
+    }
+
+    /**
+     * This method is used to upload result to S3.
+     *
+     * @param modelId BigInteger
+     * @param experimentId int
+     * @param localOutputDir String
+     */
+    private void uploadResult(BigInteger modelId, int experimentId, String localOutputDir) {
+        final var outputObjectKey = getOutputObjectKey(modelId, experimentId);
+
+        s3Service.uploadDirectory(localOutputDir, outputObjectKey);
+    }
+
+    /**
+     * This method is used to get output object key.
+     *
+     * @param modelId BigInteger
+     * @param experimentId int
+     * @return String
+     */
+    private String getOutputObjectKey(BigInteger modelId, int experimentId) {
+        final var userId = authService.getCurrentUserId();
+
+        return String.format("simulation_results/user_%s/model_%s/experiment_%s", userId, modelId, experimentId);
     }
 
 }
