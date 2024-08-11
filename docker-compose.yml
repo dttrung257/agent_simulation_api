@@ -5,7 +5,7 @@ services:
     container_name: agent_simulation_api
     build:
       context: .
-      dockerfile: docker/api/Dockerfile
+      dockerfile: docker/local/api/Dockerfile
     ports:
       - "9999:9999"
     networks:
@@ -45,9 +45,15 @@ services:
 
   redis:
     container_name: agent_simulation_redis
+    build:
+      context: .
+      dockerfile: docker/local/redis/Dockerfile
     image: redis:7.4
+    volumes:
+      - agent_simulation_redis_data:/data/
+      - ./docker/local/redis/redis.conf:/usr/local/etc/redis/redis.conf
     ports:
-      - "6379:6379"
+      - "16379:6379"
     networks:
       - agent_simulation_net
 
@@ -57,3 +63,4 @@ networks:
 
 volumes:
   agent_simulation_data_volume:
+  agent_simulation_redis_data:

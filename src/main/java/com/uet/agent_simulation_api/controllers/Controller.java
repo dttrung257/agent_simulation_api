@@ -2,7 +2,6 @@ package com.uet.agent_simulation_api.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.uet.agent_simulation_api.models.AppUser;
-import com.uet.agent_simulation_api.models.Project;
 import com.uet.agent_simulation_api.repositories.ProjectRepository;
 import com.uet.agent_simulation_api.repositories.UserRepository;
 import com.uet.agent_simulation_api.responses.ResponseHandler;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigInteger;
 import java.util.List;
 
 @RestController
@@ -86,5 +84,14 @@ public class Controller {
         return ResponseHandler.respondSuccess(
                 "Server is running on port " + port + " with profiles: " + profile + ", thread: " + Thread.currentThread()
         );
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<SuccessResponse> test() {
+//        final var message = Message.builder().nodeId(BigInteger.ONE).type("test").build();
+//
+//        final var simulation = RunSimulation.builder().experiments()
+
+        return ResponseHandler.respondSuccess("Test");
     }
 }

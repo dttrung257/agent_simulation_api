@@ -32,7 +32,10 @@ public class ExperimentResult extends Auditable {
     private BigInteger id;
 
     @Column(nullable = false)
-    private String image_url;
+    private Integer finalStep;
+
+    @Column(columnDefinition = "VARCHAR(300)")
+    private String url;
 
     @Column(name = "experiment_id", nullable = false, insertable = false, updatable = false, columnDefinition = "BIGINT")
     private BigInteger experimentId;

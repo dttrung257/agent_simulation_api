@@ -21,11 +21,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    show_sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
       format_sql: true
-      show_sql: true
-      properties:
-        hibernate:
-          dialect: org.hibernate.dialect.MySQL8Dialect
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -35,8 +35,10 @@ spring:
     password: agent_simulation_password
   data:
     redis:
-      host: <host>
-      port: <port>
+      host: host.docker.internal
+      port: 16379
+      password: 123456
+      database: 0
 
 aws:
   access-key: <access-key>

@@ -56,3 +56,8 @@ java -jar build/libs/agent_simulation_api-0.0.1-SNAPSHOT.jar
 
 ## Log
 See at storage/logs/spring.log
+
+## Insert master data
+```
+docker exec -i agent_simulation_db mysql -uagent_simulation_user -pagent_simulation_password agent_simulation < ./src/main/resources/db/sql/master_data.sql
+```

@@ -2,6 +2,8 @@ package com.uet.agent_simulation_api.services;
 
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 
+import java.util.List;
+
 /**
  * S3 service interface.
  */
@@ -37,4 +39,26 @@ public interface IS3Service {
      * @param s3Directory String
      */
     void uploadDirectory(String localPath, String s3Directory);
+
+    /**
+     * This method is used to make a folder public in S3
+     *
+     * @param s3Directory String
+     */
+    void makeFolderPublic(String s3Directory);
+
+    /**
+     * This method is used to list all files in a directory in S3
+     *
+     * @param s3Directory String
+     * @return List<String>
+     */
+    List<String> listFileNamesInDirectory(String s3Directory);
+
+    /**
+     * This method is used to get the S3 prefix URL
+     *
+     * @return String
+     */
+    String getS3PrefixUrl();
 }

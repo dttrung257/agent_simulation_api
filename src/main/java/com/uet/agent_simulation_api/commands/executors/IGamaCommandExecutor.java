@@ -1,5 +1,6 @@
 package com.uet.agent_simulation_api.commands.executors;
 
+import java.math.BigInteger;
 import java.util.concurrent.CompletableFuture;
 
 public interface IGamaCommandExecutor extends ICommandExecutor {
@@ -14,5 +15,5 @@ public interface IGamaCommandExecutor extends ICommandExecutor {
      * @param finalStep - final step of the experiment
      * @return CompletableFuture<Void>
      */
-    CompletableFuture<Void> executeLegacy(String createXmlCommand, String runLegacyCommand, String pathToXmlFile, int experimentId, String experimentName, long finalStep);
+    CompletableFuture<Void> executeLegacy(String createXmlCommand, String runLegacyCommand, String pathToXmlFile, BigInteger experimentId, String experimentName, long finalStep);
 }

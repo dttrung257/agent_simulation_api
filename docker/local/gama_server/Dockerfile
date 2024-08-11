@@ -1,6 +1,6 @@
 FROM gamaplatform/gama:1.9.3
 
-COPY /docker/api/docker-entrypoint.sh /
+COPY /docker/local/api/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
 
 CMD ["/docker-entrypoint.sh"]

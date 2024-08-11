@@ -7,6 +7,7 @@ import java.math.BigInteger;
 
 @Service
 public class AuthService implements IAuthService {
+    @Override
     public BigInteger getCurrentUserId() {
         return BigInteger.valueOf(1);
     }

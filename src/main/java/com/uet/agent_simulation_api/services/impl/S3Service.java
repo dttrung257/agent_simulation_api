@@ -12,12 +12,17 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
+import software.amazon.awssdk.services.s3.model.PutObjectAclRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.transfer.s3.S3TransferManager;
 import software.amazon.awssdk.transfer.s3.model.UploadDirectoryRequest;
 
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 /*
  * This class is used to interact with AWS S3.
@@ -32,6 +37,9 @@ public class S3Service implements IS3Service {
 
     @Value("${aws.s3.bucket-name}")
     private String bucketName;
+
+    @Value("${aws.region}")
+    private String region;
 
     @Override
     public void uploadFile(String objectKey, String localPath) {
@@ -76,14 +84,44 @@ public class S3Service implements IS3Service {
                 .s3Prefix(s3Directory)
                 .build());
 
-            final var completedDirectoryUpload = directoryUpload.completionFuture().join();
-
-            completedDirectoryUpload.failedTransfers()
-                    .forEach(fail -> log.warn("Object [{}] failed to transfer", fail.toString()));
+            directoryUpload.completionFuture().whenComplete((response, exception) -> {
+                if (exception != null) {
+                    log.error("Error uploading directory to S3", exception);
+                } else {
+                    makeFolderPublic(s3Directory);
+                }
+            }).join();
         } catch (Exception e) {
             log.error("Error uploading directory to S3", e);
         }
     }
+
+    @Override
+    public void makeFolderPublic(String s3Directory) {
+        try {
+            // List all objects in the folder
+            ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
+                    .bucket(bucketName)
+                    .prefix(s3Directory)
+                    .build();
+
+            ListObjectsV2Response listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
+
+            // Set ACL to public-read for each object
+            for (S3Object s3Object : listObjectsResponse.contents()) {
+                s3Client.putObjectAcl(PutObjectAclRequest.builder()
+                        .bucket(bucketName)
+                        .key(s3Object.key())
+                        .acl(ObjectCannedACL.PUBLIC_READ)
+                        .build());
+            }
+
+            log.info("All objects in folder [{}] have been made public.", s3Directory);
+        } catch (Exception e) {
+            log.error("Error making folder public in S3", e);
+        }
+    }
+
 
     /**
      * This method is used to delete objects in specific S3 directory.
@@ -124,5 +162,35 @@ public class S3Service implements IS3Service {
     @Override
     public void clearDirectory(String s3Directory) {
         virtualThreadExecutor.submit(() -> this.clear(s3Directory));
+    }
+
+    @Override
+    public List<String> listFileNamesInDirectory(String s3Directory) {
+        List<String> fileNames;
+
+        try {
+            ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
+                    .bucket(bucketName)
+                    .prefix(s3Directory)
+                    .build();
+
+            ListObjectsV2Response listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
+
+            fileNames = listObjectsResponse.contents().stream()
+                    .map(S3Object::key)
+                    .collect(Collectors.toList());
+
+            log.info("Found {} files in folder {}", fileNames.size(), s3Directory);
+        } catch (Exception e) {
+            log.error("Error listing files in directory", e);
+            fileNames = Collections.emptyList();
+        }
+
+        return fileNames;
+    }
+
+    @Override
+    public String getS3PrefixUrl() {
+        return "https://" + bucketName + ".s3." + region + ".amazonaws.com/";
     }
 }

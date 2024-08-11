@@ -34,10 +34,7 @@ public class Experiment extends Auditable {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    private Integer finalStep;
-
-    @Column(name = "model_id", nullable = false, insertable = false, updatable = false, columnDefinition = "BIGINT")
+    @Column(name = "model_id", insertable = false, updatable = false, columnDefinition = "BIGINT")
     private BigInteger modelId;
 
     @ManyToOne(fetch = FetchType.LAZY)
