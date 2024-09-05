@@ -1,15 +1,15 @@
 INSERT INTO users
-    (id, fullname, email, password, role, created_at, updated_at, created_by, updated_by)
+(id, fullname, email, password, role, created_at, updated_at, created_by, updated_by)
 VALUES
     (1, 'admin', 'admin@uet.vn', '$2a$10$KlieR6MHNv88eZYteM9b9eue.5Y1/okJyDUm9uzYIWqtMQJ2mDhNq', 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn');
 
 INSERT INTO projects
-    (id, user_id, name, location, created_at, updated_at, created_by, updated_by)
+(id, user_id, name, location, created_at, updated_at, created_by, updated_by)
 VALUES
-    (1, 1, 'pig-farm', '/Users/trungdt/Workspaces/uet/gama/pig-farm', '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn');
+    (1, 1, 'pig-farm', '/app/projects/pig-farm', '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn');
 
 INSERT INTO models
-    (id, name, project_id, created_at, updated_at, created_by, updated_by)
+(id, name, project_id, created_at, updated_at, created_by, updated_by)
 VALUES
     (1, 'config', 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
     (2, 'disease-pig', 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
@@ -31,15 +31,12 @@ VALUES
     (18, 'simulator-05', 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
     (19, 'simulator-06', 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
     (20, 'simulator-07', 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
-    (21, 'transmit-disease-config', 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
-    (22, 'transmit-disease-factor', 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
-    (23, 'transmit-disease-pig', 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
-    (24, 'trough', 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
-    (25, 'water-disease-config', 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
-    (26, 'water-disease-factor', 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn');
+    (21, 'trough', 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
+    (22, 'water-disease-config', 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
+    (23, 'water-disease-factor', 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn');
 
 INSERT INTO experiments
-    (id, name, model_id, created_at, updated_at, created_by, updated_by)
+(id, name, model_id, created_at, updated_at, created_by, updated_by)
 VALUES
     (1, 'Normal', 14, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
     (2, 'CC', 15, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),

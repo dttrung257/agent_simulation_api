@@ -12,7 +12,7 @@ public interface ExperimentResultImageRepository extends JpaRepository<Experimen
     List<ExperimentResultImage> findByExperimentResultId(BigInteger experimentResultId);
 
     @Query(
-            value = """
+        value = """
             SELECT eri.* FROM experiment_result_images as eri
             JOIN experiment_results ON eri.experiment_result_id = experiment_results.id
             JOIN experiments ON experiment_results.experiment_id = experiments.id
@@ -24,7 +24,7 @@ public interface ExperimentResultImageRepository extends JpaRepository<Experimen
             AND (:model_id IS NULL OR models.id = :model_id)
             AND (:project_id IS NULL OR projects.id = :project_id)
         """,
-            nativeQuery = true
+        nativeQuery = true
     )
     List<ExperimentResultImage> find(
             @Param("user_id") BigInteger userId,

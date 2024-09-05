@@ -1,59 +1,68 @@
 version: '3'
 
 services:
+#  nginx:
+#    container_name: agent_simulation_dev_nginx
+#    restart: always
+#    build:
+#      context: .
+#      dockerfile: ./docker/development/nginx/Dockerfile
+#    volumes:
+#      - ./docker/development/nginx/nginx.conf:/etc/nginx/nginx.conf
+#    ports:
+#      - 80:80
+#    networks:
+#      - agent_simulation_net
+#    depends_on:
+#      - api
+#      - db
+#      - redis
+
   api:
-    container_name: agent_simulation_api
+    container_name: agent_simulation_dev_api
+    restart: always
     build:
       context: .
-      dockerfile: docker/local/api/Dockerfile
+      dockerfile: ./docker/development/api/Dockerfile
+    volumes:
+      - ./:/app
+      - ./projects:/app/projects
+      - /opt/gama-platform:/opt/gama-platform
     ports:
-      - "9999:9999"
+      - "8080:8080"
     networks:
       - agent_simulation_net
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
       - db
       - redis
-#      - gama_server
-#
-#  gama_server:
-#    container_name: agent_simulation_gama_server
-#    build:
-#      context: .
-#      dockerfile: docker/gama_server/Dockerfile
-#    ports:
-#      - "6868:6868"
-#    networks:
-#      - agent_simulation_net
 
   db:
-    container_name: agent_simulation_db
+    container_name: agent_simulation_dev_db
+    restart: always
     image: mysql:8.4
     ports:
-      - "10306:3306"
+      - "3306:3306"
     networks:
       - agent_simulation_net
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: 2MKf2apdFvdSgFxiIxCt
       MYSQL_DATABASE: agent_simulation
-      MYSQL_USER: agent_simulation_user
-      MYSQL_PASSWORD: agent_simulation_password
+      MYSQL_USER: agsuser
+      MYSQL_PASSWORD: 2MKf2apdFvdSgFxiIxCt
       TZ: Asia/Ho_Chi_Minh
     volumes:
       - agent_simulation_data_volume:/var/lib/mysql
 
   redis:
-    container_name: agent_simulation_redis
-    build:
-      context: .
-      dockerfile: docker/local/redis/Dockerfile
+    container_name: agent_simulation_dev_redis
+    restart: always
     image: redis:7.4
+    command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
       - agent_simulation_redis_data:/data/
-      - ./docker/local/redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./docker/development/redis/redis.conf:/usr/local/etc/redis/redis.conf
     ports:
-      - "16379:6379"
+      - "6379:6379"
     networks:
       - agent_simulation_net
 

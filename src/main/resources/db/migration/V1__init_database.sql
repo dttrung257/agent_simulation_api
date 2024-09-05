@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- projects table --
 CREATE TABLE IF NOT EXISTS projects (
     id BIGINT NOT NULL AUTO_INCREMENT,
-    user_id BIGINT,
+    user_id BIGINT NOT NULL,
     name VARCHAR(255) NOT NULL,
     location VARCHAR(255) NOT NULL,
     created_at DATETIME NOT NULL,
@@ -95,4 +95,18 @@ CREATE TABLE IF NOT EXISTS nodes (
     updated_by VARCHAR(255),
 
     PRIMARY KEY (`id`)
-)
+);
+
+-- experiment_result_statuses table --
+CREATE TABLE IF NOT EXISTS experiment_result_statuses (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    experiment_id BIGINT NOT NULL,
+    status TINYINT NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
+    PRIMARY KEY (`id`),
+    CONSTRAINT fk_experiment_result_statuses_experiment_id FOREIGN KEY (experiment_id) REFERENCES experiments(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_experiment_result_statuses_experiment_id ON experiment_result_statuses(experiment_id);

@@ -29,4 +29,17 @@ public interface ModelRepository extends JpaRepository<Model, BigInteger> {
         nativeQuery = true
     )
     List<Model> find(@Param("user_id") BigInteger userId, @Param("project_id") BigInteger projectId);
+
+    @Query(
+        value = """
+        SELECT m.* FROM models as m
+        JOIN experiments ON m.id = experiments.model_id
+        JOIN projects ON m.project_id = projects.id
+        WHERE projects.user_id = :user_id
+        AND (:project_id IS NULL OR projects.id = :project_id)
+        AND experiments.id IS NOT NULL
+        """,
+        nativeQuery = true
+    )
+    List<Model> findByExperimentNotNull(@Param("user_id") BigInteger userId, @Param("project_id") BigInteger projectId);
 }

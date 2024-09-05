@@ -1,7 +1,8 @@
-FROM eclipse-temurin:21
+FROM gradle:8.8-jdk21
 
-ARG JAR_FILE=build/libs/*.jar
-COPY ${JAR_FILE} /app.jar
+WORKDIR /app
+
+COPY . .
 
 COPY /docker/local/api/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh

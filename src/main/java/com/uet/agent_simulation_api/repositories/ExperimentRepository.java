@@ -17,8 +17,7 @@ public interface ExperimentRepository extends JpaRepository<Experiment, BigInteg
         """,
         nativeQuery = true
     )
-    Optional<Experiment> findByExperimentIdAndModelId(
-            @Param("experiment_id") BigInteger experimentId, @Param("model_id") BigInteger modelId);
+    Optional<Experiment> findByExperimentIdAndModelId(@Param("experiment_id") BigInteger experimentId, @Param("model_id") BigInteger modelId);
 
     @Query(
         value = """
@@ -31,6 +30,5 @@ public interface ExperimentRepository extends JpaRepository<Experiment, BigInteg
         """,
         nativeQuery = true
     )
-    List<Experiment> find(
-        @Param("user_id") BigInteger userId, @Param("project_id") BigInteger projectId, @Param("model_id") BigInteger modelId);
+    List<Experiment> find(@Param("user_id") BigInteger userId, @Param("project_id") BigInteger projectId, @Param("model_id") BigInteger modelId);
 }

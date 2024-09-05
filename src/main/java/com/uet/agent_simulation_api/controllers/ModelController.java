@@ -20,7 +20,8 @@ public class ModelController {
     private final ResponseHandler responseHandler;
 
     @GetMapping
-    public ResponseEntity<SuccessResponse> get(@RequestParam(name = "project_id", required = false) BigInteger projectId) {
-        return responseHandler.respondSuccess(modelService.get(projectId));
+    public ResponseEntity<SuccessResponse> get(
+            @RequestParam(name = "project_id", required = false) BigInteger projectId, @RequestParam(name = "has_experiment", required = false) Boolean hasExperiment) {
+        return responseHandler.respondSuccess(modelService.get(projectId, hasExperiment));
     }
 }

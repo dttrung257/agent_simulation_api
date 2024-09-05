@@ -6,5 +6,5 @@ import java.math.BigInteger;
 import java.util.List;
 
 public interface IModelService {
-    List<Model> get(BigInteger projectId);
+    List<Model> get(BigInteger projectId, Boolean hasExperiment);
 }

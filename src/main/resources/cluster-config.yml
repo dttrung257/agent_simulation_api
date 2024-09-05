@@ -1,0 +1,3 @@
+cluster:
+  node_id: 1
+  node_role: 1

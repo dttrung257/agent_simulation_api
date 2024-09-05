@@ -5,6 +5,7 @@ import com.uet.agent_simulation_api.repositories.NodeRepository;
 import com.uet.agent_simulation_api.utils.FileUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,22 +19,26 @@ public class AgentSimulationApiApplication implements CommandLineRunner {
 	private final FileUtil fileUtil;
 	private final NodeRepository nodeRepository;
 
+	@Value("${cluster.config.path}")
+	private String clusterConfigPath;
+
 	public static void main(String[] args) {
 		SpringApplication.run(AgentSimulationApiApplication.class, args);
 	}
 
 	@Override
 	public void run(String... args) throws Exception {
-		if (!existsEnvFile()) {
+		log.info("CLuster config path: {}", clusterConfigPath);
+		if (!existsClusterConfig()) {
 			// exit program
-			log.error("application.yml not found");
-			System.exit(1);
+			log.error(" not found");
+			return;
 		}
 
 		if (!checkNodeId()) {
 			// exit program
 			log.error("Error while checking node ID");
-			System.exit(1);
+			return;
 		}
 
 		initNode();
@@ -44,8 +49,8 @@ public class AgentSimulationApiApplication implements CommandLineRunner {
 	 *
 	 * @return true if the file exists, false otherwise.
 	 */
-	private boolean existsEnvFile() {
-		return fileUtil.fileExists("src/main/resources/application.yml");
+	private boolean existsClusterConfig() {
+		return fileUtil.fileExists(clusterConfigPath);
 	}
 
 	/**
@@ -54,7 +59,7 @@ public class AgentSimulationApiApplication implements CommandLineRunner {
 	 * @return true if the node ID is valid, false otherwise.
 	 */
 	private boolean checkNodeId() {
-		final var nodeId = fileUtil.getValueByKey("src/main/resources/application.yml", "node_id");
+		final var nodeId = fileUtil.getValueByKey(clusterConfigPath, "node_id");
 		if (nodeId == null) {
 			log.error("An error occurred while getting the node ID");
 
@@ -64,8 +69,8 @@ public class AgentSimulationApiApplication implements CommandLineRunner {
 		if (nodeId.isEmpty()) {
 			log.info("Node ID undefined in application.yml. Start setting node ID");
 
-			fileUtil.findAndWrite("src/main/resources/application.yml", "node_id", "1");
-			fileUtil.findAndWrite("src/main/resources/application.yml", "node_role", "1");
+			fileUtil.findAndWrite(clusterConfigPath, "node_id", "1");
+			fileUtil.findAndWrite(clusterConfigPath, "node_role", "1");
 			return true;
 		}
 

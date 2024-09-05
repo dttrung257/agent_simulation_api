@@ -11,4 +11,13 @@ public final class CommonErrors {
 
     // Validation error
     public static final ErrorDetails E0002 = new ErrorDetails(HttpStatus.BAD_REQUEST.value(), "E0002", "Validation Error");
+
+    // Unauthorized error - E0003 - 401
+    public static final ErrorDetails E0003 = new ErrorDetails(HttpStatus.UNAUTHORIZED.value(), "E0003", "Unauthorized");
+
+    // Access denied error - E0004 - 403
+    public static final ErrorDetails E0004 = new ErrorDetails(HttpStatus.FORBIDDEN.value(), "E0004", "Access Denied");
+
+    // Login fail - E0005 - 401
+    public static final ErrorDetails E0005 = new ErrorDetails(HttpStatus.UNAUTHORIZED.value(), "E0005", "Email or password is incorrect");
 }

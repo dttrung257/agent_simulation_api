@@ -17,7 +17,11 @@ public class ModelService implements IModelService {
     private final ModelRepository modelRepository;
 
     @Override
-    public List<Model> get(BigInteger projectId) {
+    public List<Model> get(BigInteger projectId, Boolean hasExperiment) {
+        if (hasExperiment != null) {
+            return modelRepository.findByExperimentNotNull(authService.getCurrentUserId(), projectId);
+        }
+
         return modelRepository.find(authService.getCurrentUserId(), projectId);
     }
 }
