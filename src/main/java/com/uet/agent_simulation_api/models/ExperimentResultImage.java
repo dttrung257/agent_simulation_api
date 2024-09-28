@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,7 +28,8 @@ import java.math.BigInteger;
 @Setter
 public class ExperimentResultImage extends Auditable {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "eri_sequence_generator")
+    @SequenceGenerator(name = "eri_sequence_generator", sequenceName = "experiment_result_image_seq", allocationSize = 1000)
     @Column(columnDefinition = "BIGINT")
     private BigInteger id;
 

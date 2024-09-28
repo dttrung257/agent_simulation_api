@@ -58,6 +58,8 @@ public class SecurityConfig {
                         // Health check
                         .requestMatchers(HttpMethod.GET, "api/v1/health").permitAll()
 
+                        .requestMatchers(HttpMethod.GET, "/resources/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

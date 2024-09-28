@@ -71,6 +71,10 @@ CREATE TABLE IF NOT EXISTS experiment_results (
 );
 CREATE INDEX idx_experiment_results_experiment_id ON experiment_results(experiment_id);
 
+CREATE TABLE IF NOT EXISTS experiment_result_image_seq (
+    next_val BIGINT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS experiment_result_images (
     id BIGINT NOT NULL AUTO_INCREMENT,
     experiment_result_id BIGINT NOT NULL,

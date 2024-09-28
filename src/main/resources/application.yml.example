@@ -9,3 +9,11 @@ spring:
 
 app:
   timezone: UTC+7
+
+gama:
+  path:
+    shell: /opt/gama-platform/headless/gama-headless.sh
+
+cluster:
+  config:
+    path: src/main/resources/cluster-config.yml

@@ -2,8 +2,10 @@ package com.uet.agent_simulation_api.repositories;
 
 import com.uet.agent_simulation_api.models.ExperimentResult;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -29,4 +31,9 @@ public interface ExperimentResultRepository extends JpaRepository<ExperimentResu
             @Param("experiment_id") BigInteger experimentId,
             @Param("model_id") BigInteger modelId,
             @Param("project_id") BigInteger projectId);
+
+    @Transactional
+    @Modifying
+    @Query("delete from ExperimentResult er where er.experimentId = :experiment_id")
+    void deleteByExperimentId(@Param("experiment_id") BigInteger experimentId);
 }
