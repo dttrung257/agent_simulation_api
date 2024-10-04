@@ -1,7 +1,7 @@
 package com.uet.agent_simulation_api.pubsub.subcriber.services;
 
 import com.uet.agent_simulation_api.pubsub.message.master.simulation.RunSimulation;
-import com.uet.agent_simulation_api.services.ISimulationService;
+import com.uet.agent_simulation_api.services.simulation.ISimulationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

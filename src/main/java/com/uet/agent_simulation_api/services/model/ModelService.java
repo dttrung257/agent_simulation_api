@@ -1,9 +1,8 @@
-package com.uet.agent_simulation_api.services.impl;
+package com.uet.agent_simulation_api.services.model;
 
 import com.uet.agent_simulation_api.models.Model;
 import com.uet.agent_simulation_api.repositories.ModelRepository;
-import com.uet.agent_simulation_api.services.IAuthService;
-import com.uet.agent_simulation_api.services.IModelService;
+import com.uet.agent_simulation_api.services.auth.IAuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

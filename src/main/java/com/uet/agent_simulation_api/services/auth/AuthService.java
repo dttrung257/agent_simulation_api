@@ -1,4 +1,4 @@
-package com.uet.agent_simulation_api.services.impl;
+package com.uet.agent_simulation_api.services.auth;
 
 import com.uet.agent_simulation_api.constant.user.Role;
 import com.uet.agent_simulation_api.exceptions.auth.UnauthorizedException;
@@ -13,7 +13,6 @@ import com.uet.agent_simulation_api.responses.auth.GetMeResponse;
 import com.uet.agent_simulation_api.responses.auth.LoginResponse;
 import com.uet.agent_simulation_api.responses.auth.RefreshResponse;
 import com.uet.agent_simulation_api.responses.auth.RegisterResponse;
-import com.uet.agent_simulation_api.services.IAuthService;
 import com.uet.agent_simulation_api.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -99,5 +98,10 @@ public class AuthService implements IAuthService {
         } catch (Exception e) {
             throw new UnauthorizedException(CommonErrors.E0003.defaultMessage());
         }
+    }
+
+    @Override
+    public AppUser getCurrentUser() {
+        return (AppUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 }

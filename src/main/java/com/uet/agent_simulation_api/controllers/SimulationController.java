@@ -7,7 +7,7 @@ import com.uet.agent_simulation_api.requests.simulation.CreateClusterSimulationR
 import com.uet.agent_simulation_api.requests.simulation.CreateSimulationRequest;
 import com.uet.agent_simulation_api.responses.ResponseHandler;
 import com.uet.agent_simulation_api.responses.SuccessResponse;
-import com.uet.agent_simulation_api.services.ISimulationService;
+import com.uet.agent_simulation_api.services.simulation.ISimulationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

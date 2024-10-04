@@ -5,6 +5,8 @@ import com.uet.agent_simulation_api.exceptions.auth.UnauthorizedException;
 import com.uet.agent_simulation_api.exceptions.errors.CommonErrors;
 import com.uet.agent_simulation_api.exceptions.ErrorResponse;
 import com.uet.agent_simulation_api.utils.TimeUtil;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -18,9 +20,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.util.List;
-
-/*
+/**
  * This class is used to handle common exceptions.
  */
 @ControllerAdvice
@@ -31,8 +31,14 @@ public class CommonExceptionHandler {
     @Value("${spring.profiles.active}")
     private String profile;
 
-    /*
+    /**
      * This method is used to handle global exception.
+     * Error code: E0001 - Something went wrong
+     * Status code: 500 - Internal Server Error
+     *
+     * @param e Exception
+     *
+     * @return ResponseEntity<ErrorResponse>
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception e) {
@@ -59,12 +65,18 @@ public class CommonExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exceptionDetail);
     }
 
-    /*
+    /**
      * This method is used to handle data validation exception.
+     * Error code: E0002 - UserValidation Error
+     * Status code: 400 - Bad Request
+     *
+     * @param e MethodArgumentNotValidException
+     *
+     * @return ResponseEntity<ErrorResponse>
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        final List<String> errors = e.getBindingResult().getFieldErrors()
+        final var errors = e.getBindingResult().getFieldErrors()
                 .stream().map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .toList();
 
@@ -79,7 +91,29 @@ public class CommonExceptionHandler {
         );
     }
 
-    /*
+    /**
+     * This method is used to handle constraint violation exception.
+     * Error code: E0002 - UserValidation Error
+     * Status code: 400 - Bad Request
+     *
+     * @param e ValidationException
+     *
+     * @return ResponseEntity<ErrorResponse>
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                new ErrorResponse(
+                        AppConst.ERROR,
+                        CommonErrors.E0002.statusCode(),
+                        CommonErrors.E0002.errorCode(),
+                        CommonErrors.E0002.defaultMessage(),
+                        e.getConstraintViolations().stream().map(ConstraintViolation::getMessage).toList().getFirst()
+                )
+        );
+    }
+
+    /**
      * This method is used to handle authentication exception.
      * Error code: E0003 - Unauthorized
      * Status code: 401 - Unauthorized
@@ -101,7 +135,7 @@ public class CommonExceptionHandler {
         );
     }
 
-    /*
+    /**
      * This method is used to handle access denied exception.
      * Error code: E0004 - Access Denied
      * Status code: 403 - Forbidden
@@ -123,7 +157,7 @@ public class CommonExceptionHandler {
         );
     }
 
-    /*
+    /**
      * This method is used to handle invalid token exception.
      * Error code: E0003 - Unauthorized
      * Status code: 401 - Unauthorized
@@ -153,7 +187,7 @@ public class CommonExceptionHandler {
         );
     }
 
-    /*
+    /**
      * This method is used to handle login fail (UsernameNotFoundException) exception.
      * Error code: E0005
      * Status code: 401 - Unauthorized
@@ -176,7 +210,7 @@ public class CommonExceptionHandler {
     }
 
 
-    /*
+    /**
      * This method is used to handle login fail (BadCredentialsException) exception.
      * Error code: E0005
      * Status code: 401 - Unauthorized

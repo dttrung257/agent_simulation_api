@@ -12,8 +12,8 @@ import java.util.Optional;
 public interface ExperimentRepository extends JpaRepository<Experiment, BigInteger> {
     @Query(
         value = """
-        SELECT * FROM experiments
-        WHERE id = :experiment_id AND model_id = :model_id
+            SELECT * FROM experiments
+            WHERE id = :experiment_id AND model_id = :model_id
         """,
         nativeQuery = true
     )
@@ -22,11 +22,9 @@ public interface ExperimentRepository extends JpaRepository<Experiment, BigInteg
     @Query(
         value = """
             SELECT e.* FROM experiments as e
-            JOIN models ON e.model_id = models.id
-            JOIN projects ON models.project_id = projects.id
-            WHERE projects.user_id = :user_id
-            AND (:project_id IS NULL OR projects.id = :project_id)
-            AND (:model_id IS NULL OR models.id = :model_id)
+            WHERE e.user_id = :user_id
+            AND (:project_id IS NULL OR e.project_id = :project_id)
+            AND (:model_id IS NULL OR e.model_id = :model_id)
         """,
         nativeQuery = true
     )

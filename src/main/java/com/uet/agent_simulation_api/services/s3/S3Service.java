@@ -1,6 +1,5 @@
-package com.uet.agent_simulation_api.services.impl;
+package com.uet.agent_simulation_api.services.s3;
 
-import com.uet.agent_simulation_api.services.IS3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -122,12 +121,7 @@ public class S3Service implements IS3Service {
         }
     }
 
-
-    /**
-     * This method is used to delete objects in specific S3 directory.
-     *
-     * @param s3Directory String
-     */
+    @Override
     public void clear(String s3Directory) {
         try {
             s3Directory = s3Directory.endsWith("/") ? s3Directory : s3Directory + "/";

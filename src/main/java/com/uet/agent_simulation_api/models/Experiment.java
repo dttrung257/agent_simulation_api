@@ -37,8 +37,24 @@ public class Experiment extends Auditable {
     @Column(name = "model_id", insertable = false, updatable = false, columnDefinition = "BIGINT")
     private BigInteger modelId;
 
+    @Column(name = "project_id", nullable = false, insertable = false, updatable = false, columnDefinition = "BIGINT")
+    private BigInteger projectId;
+
+    @Column(name = "user_id", nullable = false, insertable = false, updatable = false, columnDefinition = "BIGINT")
+    private BigInteger userId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "model_id", referencedColumnName = "id")
     @JsonIgnore
     private Model model;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id", referencedColumnName = "id")
+    @JsonIgnore
+    private Project project;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JsonIgnore
+    private AppUser user;
 }

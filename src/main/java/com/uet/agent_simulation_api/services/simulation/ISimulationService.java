@@ -1,4 +1,4 @@
-package com.uet.agent_simulation_api.services;
+package com.uet.agent_simulation_api.services.simulation;
 
 import com.uet.agent_simulation_api.requests.simulation.CreateSimulationRequest;
 

@@ -1,5 +1,6 @@
-package com.uet.agent_simulation_api.services;
+package com.uet.agent_simulation_api.services.auth;
 
+import com.uet.agent_simulation_api.models.AppUser;
 import com.uet.agent_simulation_api.requests.auth.LoginRequest;
 import com.uet.agent_simulation_api.requests.auth.RefreshRequest;
 import com.uet.agent_simulation_api.requests.auth.RegisterRequest;
@@ -51,4 +52,11 @@ public interface IAuthService {
      * @return RefreshResponse
      */
     RefreshResponse refresh(RefreshRequest request);
+
+    /**
+     * This method is used to get current logged in user.
+     *
+     * @return boolean
+     */
+    AppUser getCurrentUser();
 }

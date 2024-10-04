@@ -28,4 +28,10 @@ public class Node extends Auditable {
 
     @Column(nullable = false, columnDefinition = "TINYINT")
     private Integer role;
+
+    @Column(nullable = false)
+    private String host;
+
+    @Column(nullable = false)
+    private Integer port;
 }

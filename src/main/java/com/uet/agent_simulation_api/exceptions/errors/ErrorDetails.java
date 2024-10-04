@@ -7,5 +7,4 @@ public record ErrorDetails(
     int statusCode,
     String errorCode,
     String defaultMessage
-) {
-}
+) { }

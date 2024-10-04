@@ -1,4 +1,4 @@
-package com.uet.agent_simulation_api.services;
+package com.uet.agent_simulation_api.services.project;
 
 import com.uet.agent_simulation_api.models.Project;
 

@@ -35,7 +35,7 @@ public class ExperimentResult extends Auditable {
     private Integer finalStep;
 
     @Column(columnDefinition = "VARCHAR(300)")
-    private String url;
+    private String location;
 
     @Column(name = "experiment_id", nullable = false, insertable = false, updatable = false, columnDefinition = "BIGINT")
     private BigInteger experimentId;

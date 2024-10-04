@@ -2,7 +2,7 @@ package com.uet.agent_simulation_api.controllers;
 
 import com.uet.agent_simulation_api.responses.ResponseHandler;
 import com.uet.agent_simulation_api.responses.SuccessResponse;
-import com.uet.agent_simulation_api.services.IExperimentResultService;
+import com.uet.agent_simulation_api.services.experiment_result.IExperimentResultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +19,15 @@ public class ExperimentResultController {
     private final ResponseHandler responseHandler;
     private final IExperimentResultService experimentResultService;
 
+    /**
+     * Get experiment results.
+     *
+     * @param experimentId BigInteger
+     * @param modelId BigInteger
+     * @param projectId BigInteger
+     *
+     * @return ResponseEntity<SuccessResponse>
+     */
     @GetMapping
     public ResponseEntity<SuccessResponse> get(
             @RequestParam(name = "experiment_id", required = false) BigInteger experimentId,

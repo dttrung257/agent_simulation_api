@@ -15,9 +15,7 @@ public interface ExperimentResultStatusRepository extends JpaRepository<Experime
         value = """
             SELECT ers.* FROM experiment_result_statuses as ers
             JOIN experiments ON ers.experiment_id = experiments.id
-            JOIN models ON experiments.model_id = models.id
-            JOIN projects ON models.project_id = projects.id
-            WHERE projects.user_id = :user_id
+            WHERE experiments.user_id = :user_id
             AND (:experiment_id IS NULL OR ers.experiment_id = :experiment_id)
         """,
         nativeQuery = true

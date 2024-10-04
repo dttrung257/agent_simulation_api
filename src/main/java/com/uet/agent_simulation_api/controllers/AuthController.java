@@ -5,7 +5,7 @@ import com.uet.agent_simulation_api.requests.auth.RefreshRequest;
 import com.uet.agent_simulation_api.requests.auth.RegisterRequest;
 import com.uet.agent_simulation_api.responses.ResponseHandler;
 import com.uet.agent_simulation_api.responses.SuccessResponse;
-import com.uet.agent_simulation_api.services.IAuthService;
+import com.uet.agent_simulation_api.services.auth.IAuthService;
 import com.uet.agent_simulation_api.utils.TrimUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

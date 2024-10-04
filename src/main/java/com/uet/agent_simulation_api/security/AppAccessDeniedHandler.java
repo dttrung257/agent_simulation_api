@@ -19,7 +19,8 @@ public class AppAccessDeniedHandler implements AccessDeniedHandler {
     private HandlerExceptionResolver resolver;
 
     @Override
-    public void handle(HttpServletRequest req, HttpServletResponse res, AccessDeniedException accessDeniedException) throws IOException, ServletException {
+    public void handle(HttpServletRequest req, HttpServletResponse res, AccessDeniedException accessDeniedException)
+            throws IOException, ServletException {
         resolver.resolveException(req, res, null, accessDeniedException);
     }
 }

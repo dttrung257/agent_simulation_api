@@ -1,9 +1,8 @@
-package com.uet.agent_simulation_api.services.impl;
+package com.uet.agent_simulation_api.services.experiment_result_status;
 
 import com.uet.agent_simulation_api.models.ExperimentResultStatus;
 import com.uet.agent_simulation_api.repositories.ExperimentResultStatusRepository;
-import com.uet.agent_simulation_api.services.IAuthService;
-import com.uet.agent_simulation_api.services.IExperimentResultStatusService;
+import com.uet.agent_simulation_api.services.auth.IAuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

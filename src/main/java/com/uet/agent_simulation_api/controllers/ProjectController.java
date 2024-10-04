@@ -2,7 +2,7 @@ package com.uet.agent_simulation_api.controllers;
 
 import com.uet.agent_simulation_api.responses.ResponseHandler;
 import com.uet.agent_simulation_api.responses.SuccessResponse;
-import com.uet.agent_simulation_api.services.IProjectService;
+import com.uet.agent_simulation_api.services.project.IProjectService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

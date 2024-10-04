@@ -17,17 +17,14 @@ public interface ExperimentResultRepository extends JpaRepository<ExperimentResu
         value = """
             SELECT er.* FROM experiment_results as er
             JOIN experiments ON er.experiment_id = experiments.id
-            JOIN models ON experiments.model_id = models.id
-            JOIN projects ON models.project_id = projects.id
-            WHERE projects.user_id = :user_id
+            WHERE experiments.user_id = :user_id
             AND (:experiment_id IS NULL OR experiments.id = :experiment_id)
-            AND (:model_id IS NULL OR models.id = :model_id)
-            AND (:project_id IS NULL OR projects.id = :project_id)
+            AND (:model_id IS NULL OR experiments.model_id = :model_id)
+            AND (:project_id IS NULL OR experiments.project_id = :project_id)
         """,
         nativeQuery = true
     )
-    List<ExperimentResult> find(
-            @Param("user_id") BigInteger userId,
+    List<ExperimentResult> find(@Param("user_id") BigInteger userId,
             @Param("experiment_id") BigInteger experimentId,
             @Param("model_id") BigInteger modelId,
             @Param("project_id") BigInteger projectId);

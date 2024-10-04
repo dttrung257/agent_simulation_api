@@ -37,8 +37,16 @@ public class Model extends Auditable {
     @Column(name = "project_id", nullable = false, insertable = false, updatable = false, columnDefinition = "BIGINT")
     private BigInteger projectId;
 
+    @Column(name = "user_id", nullable = false, insertable = false, updatable = false, columnDefinition = "BIGINT")
+    private BigInteger userId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", referencedColumnName = "id")
     @JsonIgnore
     private Project project;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JsonIgnore
+    private AppUser user;
 }

@@ -11,11 +11,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.BatchSize;
 
 import java.math.BigInteger;
 
@@ -26,6 +24,8 @@ import java.math.BigInteger;
 @SuperBuilder
 @Getter
 @Setter
+@BatchSize(size = 1000)
+@ToString
 public class ExperimentResultImage extends Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "eri_sequence_generator")
@@ -33,14 +33,30 @@ public class ExperimentResultImage extends Auditable {
     @Column(columnDefinition = "BIGINT")
     private BigInteger id;
 
+    private String name;
+
     @Column(columnDefinition = "VARCHAR(300)")
-    private String imageUrl;
+    @JsonIgnore
+    private String location;
+
+    @Column(columnDefinition = "VARCHAR(20)")
+    private String extension;
+
+    private Integer step;
 
     @Column(name = "experiment_result_id", nullable = false, insertable = false, updatable = false, columnDefinition = "BIGINT")
     private BigInteger experimentResultId;
+
+    @Column(name = "experiment_result_category_id", insertable = false, updatable = false, columnDefinition = "BIGINT")
+    private BigInteger experimentResultCategoryId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "experiment_result_id", referencedColumnName = "id")
     @JsonIgnore
     private ExperimentResult experimentResult;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "experiment_result_category_id", referencedColumnName = "id")
+    @JsonIgnore
+    private ExperimentResultCategory experimentResultCategory;
 }

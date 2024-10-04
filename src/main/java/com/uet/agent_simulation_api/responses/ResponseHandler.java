@@ -5,6 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
+
 @Service
 public class ResponseHandler {
     /**
@@ -15,7 +17,18 @@ public class ResponseHandler {
      * @return ResponseEntity<SuccessResponse>
      */
     public ResponseEntity<SuccessResponse> respondSuccess(Object data) {
-        return ResponseEntity.ok(new SuccessResponse(AppConst.SUCCESS, HttpStatus.OK.value(), data));
+        return ResponseEntity.ok(new SuccessResponse(AppConst.SUCCESS, HttpStatus.OK.value(), null, data));
+    }
+
+    /**
+     * This method is used to response success for this API.
+     *
+     * @param data Object
+     *
+     * @return ResponseEntity<SuccessResponse>
+     */
+    public ResponseEntity<SuccessResponse> respondSuccess(BigInteger total, Object data) {
+        return ResponseEntity.ok(new SuccessResponse(AppConst.SUCCESS, HttpStatus.OK.value(), total, data));
     }
 
     /**
@@ -27,6 +40,19 @@ public class ResponseHandler {
      * @return ResponseEntity<SuccessResponse>
      */
     public ResponseEntity<SuccessResponse> respondSuccess(HttpStatus httpStatus, Object data) {
-        return ResponseEntity.ok(new SuccessResponse(AppConst.SUCCESS, httpStatus.value(), data));
+        return ResponseEntity.ok(new SuccessResponse(AppConst.SUCCESS, httpStatus.value(), null, data));
+    }
+
+    /**
+     * This method is used to response success for this API.
+     *
+     * @param httpStatus HttpStatus
+     * @param total BigInteger
+     * @param data Object
+     *
+     * @return ResponseEntity<SuccessResponse>
+     */
+    public ResponseEntity<SuccessResponse> respondSuccess(HttpStatus httpStatus, BigInteger total, Object data) {
+        return ResponseEntity.status(httpStatus).body(new SuccessResponse(AppConst.SUCCESS, httpStatus.value(), total, data));
     }
 }

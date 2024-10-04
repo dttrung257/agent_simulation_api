@@ -47,7 +47,7 @@ public class AppUser extends Auditable implements UserDetails {
     @JsonIgnore
     private String password;
 
-    @Column(nullable = false, columnDefinition = "SMALLINT")
+    @Column(nullable = false, columnDefinition = "TINYINT")
     private Integer role;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)

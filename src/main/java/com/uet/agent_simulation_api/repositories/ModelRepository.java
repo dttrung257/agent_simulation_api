@@ -12,8 +12,8 @@ import java.util.Optional;
 public interface ModelRepository extends JpaRepository<Model, BigInteger> {
     @Query(
         value = """
-        SELECT * FROM models
-        WHERE id = :model_id AND project_id = :project_id
+            SELECT * FROM models
+            WHERE id = :model_id AND project_id = :project_id
         """,
         nativeQuery = true
     )
@@ -21,10 +21,9 @@ public interface ModelRepository extends JpaRepository<Model, BigInteger> {
 
     @Query(
         value = """
-        SELECT m.* FROM models as m
-        JOIN projects ON m.project_id = projects.id
-        WHERE projects.user_id = :user_id
-        AND (:project_id IS NULL OR projects.id = :project_id)
+            SELECT m.* FROM models as m
+            WHERE m.user_id = :user_id
+            AND (:project_id IS NULL OR m.project_id = :project_id)
         """,
         nativeQuery = true
     )
@@ -32,12 +31,11 @@ public interface ModelRepository extends JpaRepository<Model, BigInteger> {
 
     @Query(
         value = """
-        SELECT m.* FROM models as m
-        JOIN experiments ON m.id = experiments.model_id
-        JOIN projects ON m.project_id = projects.id
-        WHERE projects.user_id = :user_id
-        AND (:project_id IS NULL OR projects.id = :project_id)
-        AND experiments.id IS NOT NULL
+            SELECT m.* FROM models as m
+            JOIN experiments ON m.id = experiments.model_id
+            WHERE m.user_id = :user_id
+            AND (:project_id IS NULL OR m.project_id = :project_id)
+            AND experiments.id IS NOT NULL
         """,
         nativeQuery = true
     )

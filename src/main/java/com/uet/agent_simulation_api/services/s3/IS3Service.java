@@ -1,4 +1,4 @@
-package com.uet.agent_simulation_api.services;
+package com.uet.agent_simulation_api.services.s3;
 
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 
@@ -46,6 +46,13 @@ public interface IS3Service {
      * @param s3Directory String
      */
     void makeFolderPublic(String s3Directory);
+
+    /**
+     * This method is used to clear a directory in S3
+     *
+     * @param s3Directory String
+     */
+    void clear(String s3Directory);
 
     /**
      * This method is used to list all files in a directory in S3
