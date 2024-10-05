@@ -12,32 +12,30 @@ import java.util.Optional;
 public interface ModelRepository extends JpaRepository<Model, BigInteger> {
     @Query(
         value = """
-            SELECT * FROM models
-            WHERE id = :model_id AND project_id = :project_id
-        """,
-        nativeQuery = true
+            SELECT m FROM Model m
+            WHERE m.id = :model_id AND m.projectId = :project_id
+        """
     )
-    Optional<Model> findByModeIdAndProjectId(@Param("model_id") BigInteger modelId, @Param("project_id") BigInteger projectId);
+    Optional<Model> findByModeIdAndProjectId(@Param("model_id") BigInteger modelId,
+        @Param("project_id") BigInteger projectId);
 
     @Query(
         value = """
-            SELECT m.* FROM models as m
-            WHERE m.user_id = :user_id
-            AND (:project_id IS NULL OR m.project_id = :project_id)
-        """,
-        nativeQuery = true
+            SELECT m FROM Model m
+            WHERE m.userId = :user_id
+            AND (:project_id IS NULL OR m.projectId = :project_id)
+        """
     )
     List<Model> find(@Param("user_id") BigInteger userId, @Param("project_id") BigInteger projectId);
 
     @Query(
         value = """
-            SELECT m.* FROM models as m
-            JOIN experiments ON m.id = experiments.model_id
-            WHERE m.user_id = :user_id
-            AND (:project_id IS NULL OR m.project_id = :project_id)
-            AND experiments.id IS NOT NULL
-        """,
-        nativeQuery = true
+            SELECT m FROM Model m
+            JOIN Experiment e ON m.id = e.modelId
+            WHERE m.userId = :user_id
+            AND (:project_id IS NULL OR m.projectId = :project_id)
+            AND e.id IS NOT NULL
+        """
     )
     List<Model> findByExperimentNotNull(@Param("user_id") BigInteger userId, @Param("project_id") BigInteger projectId);
 }

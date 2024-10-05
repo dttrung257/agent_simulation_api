@@ -15,5 +15,6 @@ public interface IGamaCommandExecutor extends ICommandExecutor {
      * @param finalStep - final step of the experiment
      * @return CompletableFuture<Void>
      */
-    CompletableFuture<Void> executeLegacy(String createXmlCommand, String runLegacyCommand, String pathToXmlFile, BigInteger experimentId, String experimentName, long finalStep);
+    CompletableFuture<Void> executeLegacy(String createXmlCommand, String runLegacyCommand, String pathToXmlFile,
+        BigInteger experimentId, String experimentName, long finalStep);
 }

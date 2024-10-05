@@ -41,19 +41,18 @@ public interface ExperimentResultImageRepository extends JpaRepository<Experimen
 
     @Query(
         value = """
-            SELECT eri.* FROM experiment_result_images as eri
-            JOIN experiment_results ON eri.experiment_result_id = experiment_results.id
-            JOIN experiments ON experiment_results.experiment_id = experiments.id
+            SELECT eri FROM ExperimentResultImage eri
+            JOIN ExperimentResult er ON eri.experimentResultId = er.id
+            JOIN Experiment e ON er.experimentId = e.id
             WHERE eri.id = :id
-            AND experiments.user_id = :user_id
-            LIMIT 1
-        """,
-        nativeQuery = true
+            AND e.userId = :user_id
+        """
     )
-    Optional<ExperimentResultImage> findByIdAndUserId(@Param("id") BigInteger id, @Param("user_id") BigInteger userId);
+    Optional<ExperimentResultImage> findByIdAndUserId(@Param("id") BigInteger id,
+        @Param("user_id") BigInteger userId);
 
     @Transactional
     @Modifying
-    @Query("delete from ExperimentResultImage eri where eri.experimentResultId = :experiment_result_id")
+    @Query("DELETE FROM ExperimentResultImage eri WHERE eri.experimentResultId = :experiment_result_id")
     void deleteByExperimentResultId(@Param("experiment_result_id") BigInteger experimentResultId);
 }

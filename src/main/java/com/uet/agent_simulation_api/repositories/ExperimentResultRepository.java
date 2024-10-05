@@ -15,14 +15,13 @@ public interface ExperimentResultRepository extends JpaRepository<ExperimentResu
 
     @Query(
         value = """
-            SELECT er.* FROM experiment_results as er
-            JOIN experiments ON er.experiment_id = experiments.id
-            WHERE experiments.user_id = :user_id
-            AND (:experiment_id IS NULL OR experiments.id = :experiment_id)
-            AND (:model_id IS NULL OR experiments.model_id = :model_id)
-            AND (:project_id IS NULL OR experiments.project_id = :project_id)
-        """,
-        nativeQuery = true
+            SELECT er FROM ExperimentResult er
+            JOIN Experiment e ON er.experimentId = e.id
+            WHERE e.userId = :user_id
+            AND (:experiment_id IS NULL OR e.id = :experiment_id)
+            AND (:model_id IS NULL OR e.modelId = :model_id)
+            AND (:project_id IS NULL OR e.projectId = :project_id)
+        """
     )
     List<ExperimentResult> find(@Param("user_id") BigInteger userId,
             @Param("experiment_id") BigInteger experimentId,
@@ -31,6 +30,6 @@ public interface ExperimentResultRepository extends JpaRepository<ExperimentResu
 
     @Transactional
     @Modifying
-    @Query("delete from ExperimentResult er where er.experimentId = :experiment_id")
+    @Query("DELETE FROM ExperimentResult er WHERE er.experimentId = :experiment_id")
     void deleteByExperimentId(@Param("experiment_id") BigInteger experimentId);
 }

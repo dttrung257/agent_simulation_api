@@ -11,10 +11,9 @@ import java.util.List;
 public interface ProjectRepository extends JpaRepository<Project, BigInteger> {
     @Query(
         value = """
-            SELECT * FROM projects
-            WHERE user_id = :user_id
-        """,
-        nativeQuery = true
+            SELECT p FROM Project p
+            WHERE p.userId = :user_id
+        """
     )
     List<Project> find(@Param("user_id") BigInteger userId);
 }

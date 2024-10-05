@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface IExperimentResultCategoryService {
     List<ExperimentResultCategory> get(BigInteger experimentResultId, BigInteger experimentId, BigInteger modelId,
-           BigInteger projectId);
+        BigInteger projectId);
 }

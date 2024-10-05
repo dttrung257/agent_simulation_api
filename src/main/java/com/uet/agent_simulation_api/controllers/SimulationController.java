@@ -38,10 +38,10 @@ public class SimulationController {
     public ResponseEntity<SuccessResponse> runSimulationCluster(@Valid @RequestBody CreateClusterSimulationRequest request) {
         request.getSimulationRequests().forEach((simulationRequest) -> {
             final var message = RunSimulation.builder()
-                    .nodeId(simulationRequest.getNodeId())
-                    .command(PubSubCommands.RUN_SIMULATION)
-                    .simulation(simulationRequest)
-                    .build();
+                .nodeId(simulationRequest.getNodeId())
+                .command(PubSubCommands.RUN_SIMULATION)
+                .simulation(simulationRequest)
+                .build();
 
             messagePublisher.publish(message);
         });

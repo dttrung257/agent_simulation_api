@@ -26,8 +26,8 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
 
     @Override
     public Pagination<List<ExperimentResultImage>> get(BigInteger experimentResultId, BigInteger experimentId, BigInteger modelId,
-           BigInteger projectId, BigInteger experimentResultCategoryId, Integer step, Integer page, Integer pageSize,
-           String orderBy, String orderDirection) {
+        BigInteger projectId, BigInteger experimentResultCategoryId, Integer step, Integer page, Integer pageSize,
+        String orderBy, String orderDirection) {
         var sort = Sort.unsorted();
         final var sortFields = AppConst.EXPERIMENT_RESULT_IMAGE_SORT_FIELDS_NATIVE;
         sort = createSort(orderBy, orderDirection, sortFields);
@@ -58,6 +58,6 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
     @Override
     public ExperimentResultImage getImage(BigInteger id) {
         return experimentResultImageRepository.findByIdAndUserId(id, authService.getCurrentUserId())
-                .orElseThrow(() -> new ExperimentResultImageNotFoundException(ExperimentResultImageErrors.E_ERI_0001.defaultMessage()));
+            .orElseThrow(() -> new ExperimentResultImageNotFoundException(ExperimentResultImageErrors.E_ERI_0001.defaultMessage()));
     }
 }

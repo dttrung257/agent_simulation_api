@@ -1,7 +1,6 @@
 package com.uet.agent_simulation_api.repositories;
 
 import com.uet.agent_simulation_api.models.ExperimentResultCategory;
-import com.uet.agent_simulation_api.models.ExperimentResultImage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

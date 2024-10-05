@@ -25,7 +25,8 @@ services:
     volumes:
       - ./:/app
       - ./projects:/app/projects
-      - /opt/gama-platform:/opt/gama-platform
+#      - /opt/gama-platform:/opt/gama-platform
+      - ./gama/gama-platform:/opt/gama-platform
     ports:
       - "8080:8080"
     networks:

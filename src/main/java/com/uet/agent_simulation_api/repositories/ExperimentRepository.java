@@ -12,21 +12,21 @@ import java.util.Optional;
 public interface ExperimentRepository extends JpaRepository<Experiment, BigInteger> {
     @Query(
         value = """
-            SELECT * FROM experiments
-            WHERE id = :experiment_id AND model_id = :model_id
-        """,
-        nativeQuery = true
+            SELECT e FROM Experiment e
+            WHERE e.id = :experiment_id AND e.modelId = :model_id
+        """
     )
-    Optional<Experiment> findByExperimentIdAndModelId(@Param("experiment_id") BigInteger experimentId, @Param("model_id") BigInteger modelId);
+    Optional<Experiment> findByExperimentIdAndModelId(@Param("experiment_id") BigInteger experimentId,
+        @Param("model_id") BigInteger modelId);
 
     @Query(
         value = """
-            SELECT e.* FROM experiments as e
-            WHERE e.user_id = :user_id
-            AND (:project_id IS NULL OR e.project_id = :project_id)
-            AND (:model_id IS NULL OR e.model_id = :model_id)
-        """,
-        nativeQuery = true
+            SELECT e FROM Experiment e
+            WHERE e.userId = :user_id
+            AND (:project_id IS NULL OR e.projectId = :project_id)
+            AND (:model_id IS NULL OR e.modelId = :model_id)
+        """
     )
-    List<Experiment> find(@Param("user_id") BigInteger userId, @Param("project_id") BigInteger projectId, @Param("model_id") BigInteger modelId);
+    List<Experiment> find(@Param("user_id") BigInteger userId, @Param("project_id") BigInteger projectId,
+        @Param("model_id") BigInteger modelId);
 }

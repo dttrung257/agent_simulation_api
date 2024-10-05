@@ -5,6 +5,7 @@ import com.uet.agent_simulation_api.pubsub.subcriber.services.MessageRouter;
 import com.uet.agent_simulation_api.utils.FileUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,9 @@ public class RedisMessageSubscriber implements MessageListener {
     private final FileUtil fileUtil;
     private final MessageRouter router;
     private final MessageConverter messageConverter;
+
+    @Value("${cluster.config.path}")
+    private String clusterConfigPath;
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
@@ -46,6 +50,6 @@ public class RedisMessageSubscriber implements MessageListener {
     }
 
     private int getNodeId() {
-        return Integer.parseInt(fileUtil.getValueByKey("src/main/resources/application.yml", "node_id"));
+        return Integer.parseInt(fileUtil.getValueByKey(clusterConfigPath, "node_id"));
     }
 }

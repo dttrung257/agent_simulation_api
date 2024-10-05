@@ -13,17 +13,17 @@ import java.util.List;
 public interface ExperimentResultStatusRepository extends JpaRepository<ExperimentResultStatus, BigInteger> {
     @Query(
         value = """
-            SELECT ers.* FROM experiment_result_statuses as ers
-            JOIN experiments ON ers.experiment_id = experiments.id
-            WHERE experiments.user_id = :user_id
-            AND (:experiment_id IS NULL OR ers.experiment_id = :experiment_id)
-        """,
-        nativeQuery = true
+            SELECT ers FROM ExperimentResultStatus ers
+            JOIN Experiment e ON ers.experimentId = e.id
+            WHERE e.userId = :user_id
+            AND (:experiment_id IS NULL OR ers.experimentId = :experiment_id)
+        """
     )
-    List<ExperimentResultStatus> findByUserIdAndExperimentId(@Param("user_id") BigInteger userId, @Param("experiment_id") BigInteger experimentId);
+    List<ExperimentResultStatus> findByUserIdAndExperimentId(@Param("user_id") BigInteger userId,
+        @Param("experiment_id") BigInteger experimentId);
 
     @Transactional
     @Modifying
-    @Query("delete from ExperimentResultStatus ers where ers.experimentId = :experiment_id")
+    @Query("DELETE FROM ExperimentResultStatus ers WHERE ers.experimentId = :experiment_id")
     void deleteByExperimentId(@Param("experiment_id") BigInteger experimentId);
 }
