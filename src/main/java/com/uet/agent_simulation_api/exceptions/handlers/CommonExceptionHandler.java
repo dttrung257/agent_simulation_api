@@ -4,13 +4,13 @@ import com.uet.agent_simulation_api.constant.AppConst;
 import com.uet.agent_simulation_api.exceptions.auth.UnauthorizedException;
 import com.uet.agent_simulation_api.exceptions.errors.CommonErrors;
 import com.uet.agent_simulation_api.exceptions.ErrorResponse;
+import com.uet.agent_simulation_api.responses.ResponseHandler;
 import com.uet.agent_simulation_api.utils.TimeUtil;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @RequiredArgsConstructor
 public class CommonExceptionHandler {
     private final TimeUtil timeUtil;
+    private final ResponseHandler responseHandler;
 
     @Value("${spring.profiles.active}")
     private String profile;
@@ -46,7 +47,7 @@ public class CommonExceptionHandler {
             // If the profile is dev or local, return the stack trace.
             case "dev", "local" -> new ErrorResponse(
                     AppConst.ERROR,
-                    CommonErrors.E0001.statusCode(),
+                    CommonErrors.E0001.httpStatus().value(),
                     CommonErrors.E0001.errorCode(),
                     e.getMessage(),
                     e.getStackTrace()
@@ -55,14 +56,14 @@ public class CommonExceptionHandler {
             // If the profile is not dev or local, return a generic error message.
             default -> new ErrorResponse(
                     AppConst.ERROR,
-                    CommonErrors.E0001.statusCode(),
+                    CommonErrors.E0001.httpStatus().value(),
                     CommonErrors.E0001.errorCode(),
                     "Something went wrong",
                     null
             );
         };
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exceptionDetail);
+        return ResponseEntity.status(CommonErrors.E0001.httpStatus()).body(exceptionDetail);
     }
 
     /**
@@ -80,15 +81,7 @@ public class CommonExceptionHandler {
                 .stream().map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .toList();
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                new ErrorResponse(
-                        AppConst.ERROR,
-                        CommonErrors.E0002.statusCode(),
-                        CommonErrors.E0002.errorCode(),
-                        CommonErrors.E0002.defaultMessage(),
-                        errors
-                )
-        );
+        return responseHandler.respondError(e, CommonErrors.E0002);
     }
 
     /**
@@ -102,15 +95,8 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                new ErrorResponse(
-                        AppConst.ERROR,
-                        CommonErrors.E0002.statusCode(),
-                        CommonErrors.E0002.errorCode(),
-                        CommonErrors.E0002.defaultMessage(),
-                        e.getConstraintViolations().stream().map(ConstraintViolation::getMessage).toList().getFirst()
-                )
-        );
+        return responseHandler.respondError(e, CommonErrors.E0002,
+                e.getConstraintViolations().stream().map(ConstraintViolation::getMessage).toList().getFirst());
     }
 
     /**
@@ -124,15 +110,7 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                new ErrorResponse(
-                        AppConst.ERROR,
-                        CommonErrors.E0003.statusCode(),
-                        CommonErrors.E0003.errorCode(),
-                        CommonErrors.E0003.defaultMessage(),
-                        CommonErrors.E0003.defaultMessage()
-                )
-        );
+        return responseHandler.respondError(e, CommonErrors.E0003);
     }
 
     /**
@@ -146,15 +124,7 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
-                new ErrorResponse(
-                        AppConst.ERROR,
-                        CommonErrors.E0004.statusCode(),
-                        CommonErrors.E0004.errorCode(),
-                        CommonErrors.E0004.defaultMessage(),
-                        e.getMessage()
-                )
-        );
+        return responseHandler.respondError(e, CommonErrors.E0004);
     }
 
     /**
@@ -176,15 +146,7 @@ public class CommonExceptionHandler {
             default -> null;
         };
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                new ErrorResponse(
-                        AppConst.ERROR,
-                        CommonErrors.E0003.statusCode(),
-                        CommonErrors.E0003.errorCode(),
-                        CommonErrors.E0003.defaultMessage(),
-                        detail
-                )
-        );
+        return responseHandler.respondError(e, CommonErrors.E0003, detail);
     }
 
     /**
@@ -198,15 +160,7 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUsernameNotFoundException(UsernameNotFoundException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                new ErrorResponse(
-                        AppConst.ERROR,
-                        CommonErrors.E0005.statusCode(),
-                        CommonErrors.E0005.errorCode(),
-                        CommonErrors.E0005.defaultMessage(),
-                        e.getMessage()
-                )
-        );
+        return responseHandler.respondError(e, CommonErrors.E0005);
     }
 
 
@@ -221,14 +175,6 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                new ErrorResponse(
-                        AppConst.ERROR,
-                        CommonErrors.E0005.statusCode(),
-                        CommonErrors.E0005.errorCode(),
-                        CommonErrors.E0005.defaultMessage(),
-                        e.getMessage()
-                )
-        );
+        return responseHandler.respondError(e, CommonErrors.E0005);
     }
 }

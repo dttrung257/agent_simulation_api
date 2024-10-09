@@ -1,3 +1,18 @@
+-- nodes table --
+CREATE TABLE IF NOT EXISTS nodes (
+    id INTEGER NOT NULL AUTO_INCREMENT,
+    name VARCHAR(255),
+    role TINYINT NOT NULL,
+    host VARCHAR(255) NOT NULL,
+    port INTEGER NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
+
+    PRIMARY KEY (`id`)
+);
+
 -- users table --
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT NOT NULL AUTO_INCREMENT,
@@ -71,9 +86,12 @@ CREATE TABLE IF NOT EXISTS experiment_results (
     updated_at DATETIME NOT NULL,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
+    node_id INTEGER NOT NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT fk_experiment_results_experiment_id FOREIGN KEY (experiment_id) REFERENCES experiments(id)
-    ON UPDATE RESTRICT ON DELETE CASCADE
+    ON UPDATE RESTRICT ON DELETE CASCADE,
+    CONSTRAINT fk_experiment_results_node_id FOREIGN KEY (node_id) REFERENCES nodes(id)
+    ON UPDATE RESTRICT ON DELETE RESTRICT
 );
 CREATE INDEX idx_experiment_results_experiment_id ON experiment_results(experiment_id);
 
@@ -121,21 +139,6 @@ CREATE TABLE IF NOT EXISTS experiment_result_images (
 );
 CREATE INDEX idx_experiment_result_images_exp_res_id_exp_res_category_id ON
 experiment_result_images(experiment_result_id, experiment_result_category_id);
-
--- nodes table --
-CREATE TABLE IF NOT EXISTS nodes (
-    id INTEGER NOT NULL AUTO_INCREMENT,
-    name VARCHAR(255),
-    role TINYINT NOT NULL,
-    host VARCHAR(255) NOT NULL,
-    port INTEGER NOT NULL,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL,
-    created_by VARCHAR(255),
-    updated_by VARCHAR(255),
-
-    PRIMARY KEY (`id`)
-);
 
 -- experiment_result_statuses table --
 CREATE TABLE IF NOT EXISTS experiment_result_statuses (

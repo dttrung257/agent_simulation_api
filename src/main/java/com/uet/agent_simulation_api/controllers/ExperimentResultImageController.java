@@ -69,16 +69,9 @@ public class ExperimentResultImageController {
      * @return ResponseEntity<byte[]>
      */
     @GetMapping("/{id}")
-    public ResponseEntity<byte[]> getImage(@PathVariable BigInteger id) throws IOException {
-        final var experimentResultImage = experimentResultImageService.getImage(id);
-        final var mediaType = imageService.getImageMediaType(experimentResultImage.getExtension());
-        final var filePath = Paths.get(experimentResultImage.getLocation());
+    public ResponseEntity<byte[]> getImage(@PathVariable BigInteger id) {
+        final var image = experimentResultImageService.getImageData(id);
 
-        // If the file does not exist, return 404.
-        if (!Files.exists(filePath)) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok().contentType(mediaType).body(Files.readAllBytes(filePath));
+        return ResponseEntity.ok().contentType(image.mediaType()).body(image.data());
     }
 }

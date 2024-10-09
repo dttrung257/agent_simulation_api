@@ -39,3 +39,4 @@ logs/*.log
 application.yml
 application-*.yml
 .workspace*/
+docker-compose.yml

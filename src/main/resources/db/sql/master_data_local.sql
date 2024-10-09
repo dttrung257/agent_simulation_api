@@ -6,7 +6,7 @@ VALUES
 INSERT INTO projects
     (id, user_id, name, location, created_at, updated_at, created_by, updated_by)
 VALUES
-    (1, 1, 'pig-farm', '/app/projects/pig-farm', '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn');
+    (1, 1, 'pig-farm', '/pig-farm', '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn');
 
 INSERT INTO models
     (id, name, project_id, user_id, created_at, updated_at, created_by, updated_by)

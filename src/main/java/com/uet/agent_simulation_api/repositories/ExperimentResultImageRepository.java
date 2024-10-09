@@ -1,6 +1,7 @@
 package com.uet.agent_simulation_api.repositories;
 
 import com.uet.agent_simulation_api.models.ExperimentResultImage;
+import com.uet.agent_simulation_api.models.projections.ExperimentResultImageDetailProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -49,6 +50,19 @@ public interface ExperimentResultImageRepository extends JpaRepository<Experimen
         """
     )
     Optional<ExperimentResultImage> findByIdAndUserId(@Param("id") BigInteger id,
+        @Param("user_id") BigInteger userId);
+
+    @Query(
+        value = """
+            SELECT eri.id AS id, er.nodeId AS nodeId, eri.location AS location, eri.extension AS extension
+            FROM ExperimentResultImage eri
+            JOIN ExperimentResult er ON eri.experimentResultId = er.id
+            JOIN Experiment e ON er.experimentId = e.id
+            WHERE eri.id = :id
+            AND e.userId = :user_id
+        """
+    )
+    Optional<ExperimentResultImageDetailProjection> findDetailById(@Param("id") BigInteger id,
         @Param("user_id") BigInteger userId);
 
     @Transactional

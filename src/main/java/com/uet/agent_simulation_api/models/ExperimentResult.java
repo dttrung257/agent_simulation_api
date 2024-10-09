@@ -40,8 +40,16 @@ public class ExperimentResult extends Auditable {
     @Column(name = "experiment_id", nullable = false, insertable = false, updatable = false, columnDefinition = "BIGINT")
     private BigInteger experimentId;
 
+    @Column(name = "node_id", nullable = false, insertable = false, updatable = false)
+    private Integer nodeId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "experiment_id", referencedColumnName = "id")
     @JsonIgnore
     private Experiment experiment;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "node_id", referencedColumnName = "id")
+    @JsonIgnore
+    private Node node;
 }
