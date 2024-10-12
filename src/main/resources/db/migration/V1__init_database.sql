@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS experiment_results (
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     node_id INTEGER NOT NULL,
+    status TINYINT NOT NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT fk_experiment_results_experiment_id FOREIGN KEY (experiment_id) REFERENCES experiments(id)
     ON UPDATE RESTRICT ON DELETE CASCADE,
@@ -141,16 +142,16 @@ CREATE INDEX idx_experiment_result_images_exp_res_id_exp_res_category_id ON
 experiment_result_images(experiment_result_id, experiment_result_category_id);
 
 -- experiment_result_statuses table --
-CREATE TABLE IF NOT EXISTS experiment_result_statuses (
-    id BIGINT NOT NULL AUTO_INCREMENT,
-    experiment_id BIGINT NOT NULL,
-    status TINYINT NOT NULL,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL,
-    created_by VARCHAR(255),
-    updated_by VARCHAR(255),
-    PRIMARY KEY (`id`),
-    CONSTRAINT fk_experiment_result_statuses_experiment_id FOREIGN KEY (experiment_id) REFERENCES experiments(id)
-    ON UPDATE RESTRICT ON DELETE CASCADE
-);
-CREATE INDEX idx_experiment_result_statuses_experiment_id ON experiment_result_statuses(experiment_id);
+-- CREATE TABLE IF NOT EXISTS experiment_result_statuses (
+--     id BIGINT NOT NULL AUTO_INCREMENT,
+--     experiment_id BIGINT NOT NULL,
+--     status TINYINT NOT NULL,
+--     created_at DATETIME NOT NULL,
+--     updated_at DATETIME NOT NULL,
+--     created_by VARCHAR(255),
+--     updated_by VARCHAR(255),
+--     PRIMARY KEY (`id`),
+--     CONSTRAINT fk_experiment_result_statuses_experiment_id FOREIGN KEY (experiment_id) REFERENCES experiments(id)
+--     ON UPDATE RESTRICT ON DELETE CASCADE
+-- );
+-- CREATE INDEX idx_experiment_result_statuses_experiment_id ON experiment_result_statuses(experiment_id);

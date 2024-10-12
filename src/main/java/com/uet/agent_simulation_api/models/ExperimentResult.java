@@ -37,6 +37,9 @@ public class ExperimentResult extends Auditable {
     @Column(columnDefinition = "VARCHAR(300)")
     private String location;
 
+    @Column(nullable = false, columnDefinition = "TINYINT")
+    private Integer status;
+
     @Column(name = "experiment_id", nullable = false, insertable = false, updatable = false, columnDefinition = "BIGINT")
     private BigInteger experimentId;
 

@@ -81,7 +81,7 @@ public class CommonExceptionHandler {
                 .stream().map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .toList();
 
-        return responseHandler.respondError(e, CommonErrors.E0002);
+        return responseHandler.respondError(e, CommonErrors.E0002, errors);
     }
 
     /**

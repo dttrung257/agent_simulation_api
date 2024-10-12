@@ -9,7 +9,6 @@ import com.uet.agent_simulation_api.models.ExperimentResultImage;
 import com.uet.agent_simulation_api.models.projections.ExperimentResultImageDetailProjection;
 import com.uet.agent_simulation_api.repositories.ExperimentResultImageRepository;
 import com.uet.agent_simulation_api.responses.Pagination;
-import com.uet.agent_simulation_api.responses.SuccessResponse;
 import com.uet.agent_simulation_api.responses.experiment_result_image.ExperimentResultImageDetailResponse;
 import com.uet.agent_simulation_api.services.auth.IAuthService;
 import com.uet.agent_simulation_api.services.image.IImageService;
@@ -27,6 +26,7 @@ import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.List;
 
 @Service
@@ -68,20 +68,40 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
         return PageRequest.of(page - 1, pageSize, sort);
     }
 
+    /**
+     * Get image data.
+     *
+     * @param id BigInteger
+     *
+     * @return ExperimentResultImageDetailResponse
+     */
     @Override
     public ExperimentResultImageDetailResponse getImageData(BigInteger id) {
         final var experimentResultImageDetailProjection = experimentResultImageRepository.findDetailById(id, authService.getCurrentUserId())
                 .orElseThrow(() -> new ExperimentResultImageNotFoundException(ExperimentResultImageErrors.E_ERI_0001.defaultMessage()));
 
+        // Check if image data is valid.
         checkImageData(experimentResultImageDetailProjection);
 
+        // If image is in current node, return image data.
         if (isCurrentNodeImage(nodeService.getCurrentNodeId(), experimentResultImageDetailProjection.getNodeId())) {
             return getCurrentNodeImage(experimentResultImageDetailProjection);
         }
 
-        return getImageInNode(experimentResultImageDetailProjection.getId(), experimentResultImageDetailProjection.getNodeId());
+        // Fetch image from node.
+        final var mediaType = imageService.getImageMediaType(experimentResultImageDetailProjection.getExtension());
+        final var base64EncodedImage = getImageFromNode(experimentResultImageDetailProjection.getId(),
+                experimentResultImageDetailProjection.getNodeId());
+
+        return new ExperimentResultImageDetailResponse(mediaType, decodeImageData(base64EncodedImage));
     }
 
+    /**
+     * Ensure image data is valid.
+     * node_id, location, extension must not be null.
+     *
+     * @param experimentResultImageDetailProjection ExperimentResultImageDetailProjection
+     */
     private void checkImageData(ExperimentResultImageDetailProjection experimentResultImageDetailProjection) {
         final var isValid = experimentResultImageDetailProjection != null
                 && experimentResultImageDetailProjection.getNodeId() != null
@@ -93,10 +113,25 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
         }
     }
 
+    /**
+     * Check if image is in current node.
+     *
+     * @param currentNodeId Integer
+     * @param imageNodeId Integer
+     *
+     * @return Boolean
+     */
     private Boolean isCurrentNodeImage(Integer currentNodeId, Integer imageNodeId) {
         return currentNodeId.equals(imageNodeId);
     }
 
+    /**
+     * Get image from current node.
+     *
+     * @param experimentResultImageDetailProjection ExperimentResultImageDetailProjection
+     *
+     * @return mediaType, imageData in byte[]
+     */
     private ExperimentResultImageDetailResponse getCurrentNodeImage(
             ExperimentResultImageDetailProjection experimentResultImageDetailProjection) {
         final var filePath = Paths.get(experimentResultImageDetailProjection.getLocation());
@@ -110,6 +145,13 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
         return new ExperimentResultImageDetailResponse(mediaType, imageData);
     }
 
+    /**
+     * Read image data from file.
+     *
+     * @param filePath Path
+     *
+     * @return byte[]
+     */
     private byte[] readImage(Path filePath) {
         try {
             return Files.readAllBytes(filePath);
@@ -118,26 +160,67 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
         }
     }
 
-    private ExperimentResultImageDetailResponse getImageInNode(BigInteger imageId, Integer nodeId) {
+    /**
+     * Create webClient to fetch image from node.
+     * Then fetch image from node.
+     *
+     * @param imageId BigInteger
+     * @param nodeId Integer
+     *
+     * @return base64 encoded image
+     */
+    private String getImageFromNode(BigInteger imageId, Integer nodeId) {
         final var webClient = nodeService.getWebClientByNodeId(nodeId);
 
         return fetchImage(webClient, imageId);
     }
 
-    private ExperimentResultImageDetailResponse fetchImage(WebClient webClient, BigInteger imageId) {
+    /**
+     * Fetch image from node.
+     *
+     * @param webClient WebClient
+     * @param imageId BigInteger
+     *
+     * @return base64 encoded image
+     */
+    private String fetchImage(WebClient webClient, BigInteger imageId) {
         try {
-            final var response = webClient.get().uri("api/v1/experiment_result_images/" + imageId)
-                    .retrieve().bodyToMono(SuccessResponse.class).block();
+            final var response = webClient.get().uri("/api/v1/experiment_result_images/" + imageId + "/encode")
+                    .retrieve().bodyToMono(String.class).block();
 
             if (response == null) {
                 throw new ExperimentResultImageNotFoundException(ExperimentResultImageErrors.E_ERI_0001.defaultMessage());
             }
 
-            return (ExperimentResultImageDetailResponse) response.data();
+            return response;
         } catch (Exception e) {
             log.error("Error while fetching image: {}", e.getMessage());
 
             throw new CannotFetchNodeDataException(e.getMessage());
         }
+    }
+
+    /**
+     * After fetching image data from node, decode it.
+     *
+     * @param base64EncodedImage String
+     *
+     * @return byte[]
+     */
+    private byte[] decodeImageData(String base64EncodedImage) {
+        try {
+            return Base64.getDecoder().decode(base64EncodedImage);
+        } catch (Exception e) {
+            log.error("Error while decoding image data: {}", e.getMessage());
+
+            throw new CannotFetchNodeDataException("Cannot decode image data from node.");
+        }
+    }
+
+    @Override
+    public String getImageDataEncoded(BigInteger id) {
+        final var image = getImageData(id);
+
+        return Base64.getEncoder().encodeToString(image.data());
     }
 }

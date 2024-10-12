@@ -15,16 +15,14 @@ import com.uet.agent_simulation_api.models.Experiment;
 import com.uet.agent_simulation_api.models.ExperimentResult;
 import com.uet.agent_simulation_api.models.ExperimentResultCategory;
 import com.uet.agent_simulation_api.models.ExperimentResultImage;
-import com.uet.agent_simulation_api.models.ExperimentResultStatus;
 import com.uet.agent_simulation_api.repositories.ExperimentRepository;
 import com.uet.agent_simulation_api.repositories.ExperimentResultCategoryRepository;
 import com.uet.agent_simulation_api.repositories.ExperimentResultImageRepository;
-import com.uet.agent_simulation_api.repositories.ExperimentResultRepository;
-import com.uet.agent_simulation_api.repositories.ExperimentResultStatusRepository;
 import com.uet.agent_simulation_api.repositories.ModelRepository;
 import com.uet.agent_simulation_api.repositories.ProjectRepository;
 import com.uet.agent_simulation_api.requests.simulation.CreateSimulationRequest;
 import com.uet.agent_simulation_api.services.auth.IAuthService;
+import com.uet.agent_simulation_api.services.experiment_result.IExperimentResultService;
 import com.uet.agent_simulation_api.services.image.IImageService;
 import com.uet.agent_simulation_api.services.node.INodeService;
 import com.uet.agent_simulation_api.services.s3.IS3Service;
@@ -67,9 +65,8 @@ public class SimulationService implements ISimulationService {
     private final IGamaCommandBuilder gamaCommandBuilder;
     private final IGamaCommandExecutor gamaCommandExecutor;
     private final ExperimentRepository experimentRepository;
-    private final ExperimentResultRepository experimentResultRepository;
+    private final IExperimentResultService experimentResultService;
     private final ExperimentResultImageRepository experimentResultImageRepository;
-    private final ExperimentResultStatusRepository experimentResultStatusRepository;
     private final ExperimentResultCategoryRepository experimentResultCategoryRepository;
 
     @Value("${app.project.path}")
@@ -184,9 +181,12 @@ public class SimulationService implements ISimulationService {
             // Build command to run experiment.
             final var runLegacyCommand = gamaCommandBuilder.buildLegacy(null, pathToExperimentPlanXmlFile, pathToLocalExperimentOutputDir);
 
+            // Recreate experiment result.
+            final var experimentResult = experimentResultService.recreate(experimentReq.getExperiment(), finalStep);
+
             // Execute legacy command.
-            executeLegacy(createXmlCommand, runLegacyCommand, pathToExperimentPlanXmlFile, projectId, modelId,
-                    experimentReq.getExperiment(), experimentResultId, finalStep, pathToLocalExperimentOutputDir);
+            executeLegacy(createXmlCommand, runLegacyCommand, pathToExperimentPlanXmlFile,
+                    experimentReq.getExperiment(), finalStep, pathToLocalExperimentOutputDir, experimentResult);
         });
     }
 
@@ -232,31 +232,30 @@ public class SimulationService implements ISimulationService {
      * @param createXmlCommand String
      * @param runLegacyCommand String
      * @param pathToExperimentPlanXmlFile String
-     * @param projectId BigInteger
-     * @param modelId BigInteger
      * @param experiment Experiment
      * @param finalStep long
      * @param pathToLocalExperimentOutputDir String
+     * @param experimentResult ExperimentResult
      */
-    private void executeLegacy(String createXmlCommand, String runLegacyCommand, String pathToExperimentPlanXmlFile, BigInteger projectId,
-       BigInteger modelId, Experiment experiment, int experimentResultId, long finalStep, String pathToLocalExperimentOutputDir) {
+    private void executeLegacy(String createXmlCommand, String runLegacyCommand, String pathToExperimentPlanXmlFile,
+        Experiment experiment, long finalStep, String pathToLocalExperimentOutputDir, ExperimentResult experimentResult) {
         try {
             final var experimentId = experiment.getId();
             final var experimentName = experiment.getName();
-            final ExperimentResultStatus experimentResultStatus = createExperimentResultStatus(experimentId);
+            experimentResultService.updateStatus(experimentResult, ExperimentResultStatusConst.IN_PROGRESS);
 
             virtualThreadExecutor.submit(() -> {
                 final var clearResourceFuture = waitForClearLocalResource(pathToLocalExperimentOutputDir);
                 clearResourceFuture.whenComplete((clearResourceResult, clearResourceError) -> {
                     if (clearResourceError != null) {
                         log.error("Error while clearing local resource", clearResourceError);
-                        updateExperimentResultStatus(experimentResultStatus, ExperimentResultStatusConst.FAILED);
+                        experimentResultService.updateStatus(experimentResult, ExperimentResultStatusConst.FAILED);
                         return;
                     }
 
                     // Execute commands
-                    final var executeCommandFuture = gamaCommandExecutor.executeLegacy(createXmlCommand, runLegacyCommand, pathToExperimentPlanXmlFile,
-                            experimentId, experimentName, finalStep);
+                    final var executeCommandFuture = gamaCommandExecutor.executeLegacy(createXmlCommand,
+                        runLegacyCommand, pathToExperimentPlanXmlFile, experimentId, experimentName, finalStep);
 
                     executeCommandFuture.whenComplete((executeCommandResult, executeCommandError) -> {
                         if (executeCommandError != null) {
@@ -264,7 +263,7 @@ public class SimulationService implements ISimulationService {
 
                             clearLocalResource(pathToLocalExperimentOutputDir);
                             clearLocalResource(pathToExperimentPlanXmlFile);
-                            updateExperimentResultStatus(experimentResultStatus, ExperimentResultStatusConst.FAILED);
+                            experimentResultService.updateStatus(experimentResult, ExperimentResultStatusConst.FAILED);
                             return;
                         }
 
@@ -294,7 +293,7 @@ public class SimulationService implements ISimulationService {
                             log.error("Error while sleeping", e);
                         }
                         final var imageList = imageService.listImagesInDirectory(pathToLocalExperimentOutputDir + "/snapshot");
-                        saveResult(experiment, experimentResultStatus, imageList, pathToLocalExperimentOutputDir, finalStep);
+                        saveResult(experimentResult, imageList, pathToLocalExperimentOutputDir);
                     });
 
                     executeCommandFuture.join();
@@ -350,25 +349,11 @@ public class SimulationService implements ISimulationService {
     /**
      * This method is used to save result after simulation.
      *
-     * @param experiment Experiment
-     * @param experimentResultStatus ExperimentResultStatus
+     * @param experimentResult ExperimentResult
      * @param imageList List<List<String>>
      * @param experimentResultLocation String
-     * @param finalStep long
      */
-    private void saveResult(Experiment experiment, ExperimentResultStatus experimentResultStatus, List<List<String>> imageList,
-        String experimentResultLocation, long finalStep) {
-        // Delete old experiment result.
-        experimentResultRepository.deleteByExperimentId(experiment.getId());
-
-        // Save new experiment result.
-        final var experimentResult = experimentResultRepository.save(ExperimentResult.builder()
-            .experiment(experiment)
-            .location(experimentResultLocation)
-            .finalStep((int) finalStep)
-            .node(nodeService.getCurrentNode())
-            .build());
-
+    private void saveResult(ExperimentResult experimentResult, List<List<String>> imageList, String experimentResultLocation) {
         long start = timeUtil.getCurrentTimeNano();
         // Save new experiment result images.
         final List<ExperimentResultImage> experimentResultImageList = new ArrayList<>();
@@ -405,82 +390,47 @@ public class SimulationService implements ISimulationService {
         log.info("Save experiment result images took: {} ns", end - start);
 
         // Update experiment result status.
-        updateExperimentResultStatus(experimentResultStatus, ExperimentResultStatusConst.DONE);
+        experimentResultService.updateStatus(experimentResult, ExperimentResultStatusConst.FINISHED);
     }
 
-    /**
-     * This method is used to create experiment result status.
-     *
-     * @param experimentId BigInteger
-     */
-    private ExperimentResultStatus createExperimentResultStatus(BigInteger experimentId) {
-        final var experiment = experimentRepository.findById(experimentId).orElse(null);
-        if (experiment == null) {
-            return null;
-        }
-
-        experimentResultStatusRepository.deleteByExperimentId(experimentId);
-        String experimentName = experiment.getName();
-
-        return experimentResultStatusRepository.save(ExperimentResultStatus.builder()
-                .experiment(experiment)
-                .status(ExperimentResultStatusConst.IN_PROGRESS)
-                .build());
-    }
-
-    /**
-     * This method is used to update experiment result status.
-     *
-     * @param experimentResultStatus ExperimentResultStatus
-     * @param status int
-     */
-    private void updateExperimentResultStatus(ExperimentResultStatus experimentResultStatus, int status) {
-        if (experimentResultStatus == null) {
-            return;
-        }
-
-        experimentResultStatus.setStatus(status);
-        experimentResultStatusRepository.save(experimentResultStatus);
-    }
-
-    /**
-     * This method is used to save result after simulation.
-     *
-     * @param experimentResultImageKeys List<String>
-     * @param experiment Experiment
-     * @param experimentResultKey String
-     * @param finalStep long
-     * @param experimentResultStatus ExperimentResultStatus
-     */
-    private void saveResultS3(List<String> experimentResultImageKeys, Experiment experiment, String experimentResultKey,
-        long finalStep, ExperimentResultStatus experimentResultStatus) {
-        // Delete old experiment result.
-        experimentResultRepository.deleteByExperimentId(experiment.getId());
-
-        // Save new experiment result.
-        final var experimentResult = experimentResultRepository.save(
-            ExperimentResult.builder()
-                .experiment(experiment).location(s3Service.getS3PrefixUrl() + experimentResultKey)
-                .finalStep((int) finalStep).build());
-
-        // Delete old images.
-        experimentResultImageRepository.deleteByExperimentResultId(experimentResult.getId());
-
-        long start = timeUtil.getCurrentTimeNano();
-        // Save new experiment result images.
-        final List<ExperimentResultImage> experimentResultImages = new ArrayList<>();
-        experimentResultImageKeys.forEach(experimentResultImageKey -> {
-            experimentResultImages.add(
-                ExperimentResultImage.builder().location(s3Service.getS3PrefixUrl() + experimentResultImageKey)
-                    .experimentResult(experimentResult).build());
-        });
-        experimentResultImageRepository.saveAll(experimentResultImages);
-        long end = timeUtil.getCurrentTimeNano();
-        log.info("Save experiment result images took: {} ns", end - start);
-
-        // Update experiment result status.
-        updateExperimentResultStatus(experimentResultStatus, ExperimentResultStatusConst.DONE);
-    }
+//    /**
+//     * This method is used to save result after simulation.
+//     *
+//     * @param experimentResultImageKeys List<String>
+//     * @param experiment Experiment
+//     * @param experimentResultKey String
+//     * @param finalStep long
+//     * @param experimentResultStatus ExperimentResultStatus
+//     */
+//    private void saveResultS3(List<String> experimentResultImageKeys, Experiment experiment, String experimentResultKey,
+//        long finalStep, ExperimentResultStatus experimentResultStatus) {
+//        // Delete old experiment result.
+//        experimentResultRepository.deleteByExperimentId(experiment.getId());
+//
+//        // Save new experiment result.
+//        final var experimentResult = experimentResultRepository.save(
+//            ExperimentResult.builder()
+//                .experiment(experiment).location(s3Service.getS3PrefixUrl() + experimentResultKey)
+//                .finalStep((int) finalStep).build());
+//
+//        // Delete old images.
+//        experimentResultImageRepository.deleteByExperimentResultId(experimentResult.getId());
+//
+//        long start = timeUtil.getCurrentTimeNano();
+//        // Save new experiment result images.
+//        final List<ExperimentResultImage> experimentResultImages = new ArrayList<>();
+//        experimentResultImageKeys.forEach(experimentResultImageKey -> {
+//            experimentResultImages.add(
+//                ExperimentResultImage.builder().location(s3Service.getS3PrefixUrl() + experimentResultImageKey)
+//                    .experimentResult(experimentResult).build());
+//        });
+//        experimentResultImageRepository.saveAll(experimentResultImages);
+//        long end = timeUtil.getCurrentTimeNano();
+//        log.info("Save experiment result images took: {} ns", end - start);
+//
+//        // Update experiment result status.
+//        updateExperimentResultStatus(experimentResultStatus, ExperimentResultStatusConst.DONE);
+//    }
 
     /**
      * This method is used to clear old S3 result.

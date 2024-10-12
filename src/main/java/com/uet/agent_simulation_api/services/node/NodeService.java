@@ -57,8 +57,7 @@ public class NodeService implements INodeService {
         final var node = getNodeById(nodeId);
         try {
             final var httpClient = HttpClient.create().responseTimeout(Duration.ofSeconds(3));
-//            final var url = getNodeUrl(node);
-            final var url = "http://localhost:9998";
+            final var url = getNodeUrl(node);
 
             return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient))
                     .baseUrl(url).build();

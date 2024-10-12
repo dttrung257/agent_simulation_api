@@ -15,10 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 @RestController
 @RequestMapping("/api/v1/experiment_result_images")
@@ -73,5 +70,17 @@ public class ExperimentResultImageController {
         final var image = experimentResultImageService.getImageData(id);
 
         return ResponseEntity.ok().contentType(image.mediaType()).body(image.data());
+    }
+
+    /**
+     * Get base64 encoded image data by id.
+     *
+     * @param id BigInteger
+     *
+     * @return ResponseEntity<String>
+     */
+    @GetMapping("/{id}/encode")
+    public ResponseEntity<String> getImageEncode(@PathVariable BigInteger id) {
+        return ResponseEntity.ok(experimentResultImageService.getImageDataEncoded(id));
     }
 }

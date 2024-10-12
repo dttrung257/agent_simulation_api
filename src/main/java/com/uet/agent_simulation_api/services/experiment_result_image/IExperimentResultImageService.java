@@ -13,4 +13,6 @@ public interface IExperimentResultImageService {
         String orderBy, String orderDirection);
 
     ExperimentResultImageDetailResponse getImageData(BigInteger id);
+
+    String getImageDataEncoded(BigInteger id);
 }
