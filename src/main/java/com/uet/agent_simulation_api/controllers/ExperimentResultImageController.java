@@ -3,7 +3,6 @@ package com.uet.agent_simulation_api.controllers;
 import com.uet.agent_simulation_api.responses.ResponseHandler;
 import com.uet.agent_simulation_api.responses.SuccessResponse;
 import com.uet.agent_simulation_api.services.experiment_result_image.IExperimentResultImageService;
-import com.uet.agent_simulation_api.services.image.IImageService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +23,6 @@ import java.math.BigInteger;
 public class ExperimentResultImageController {
     private final ResponseHandler responseHandler;
     private final IExperimentResultImageService experimentResultImageService;
-    private final IImageService imageService;
 
     /**
      * Get experiment result images.
@@ -46,12 +44,19 @@ public class ExperimentResultImageController {
             @RequestParam(name = "project_id", required = false) BigInteger projectId,
             @RequestParam(name = "category_id", required = false) BigInteger experimentResultCategoryId,
             @RequestParam(name = "step", required = false) Integer step,
+            @RequestParam(name = "start_step", required = false) Integer startStep,
+            @RequestParam(name = "end_step", required = false) Integer endStep,
             @RequestParam(name = "page", required = false, defaultValue = "1")
             @Min(value = 1, message = "page must be greater than or equal to 1") Integer page,
             @RequestParam(name = "page_size", required = false, defaultValue = "10")
             @Max(value = 200, message = "page_size must be less than or equal to 200") Integer pageSize,
             @RequestParam(name = "order_by", required = false) String orderBy,
             @RequestParam(name = "order_direction", required = false) String orderDirection) {
+
+        if (experimentResultId != null && startStep != null && endStep != null) {
+            return responseHandler.respondSuccess(experimentResultImageService.getByRange(experimentResultId, startStep, endStep));
+        }
+
         final var experimentResultImageRes = experimentResultImageService.get(experimentResultId, experimentId, modelId,
                 projectId, experimentResultCategoryId, step, page, pageSize, orderBy, orderDirection);
 

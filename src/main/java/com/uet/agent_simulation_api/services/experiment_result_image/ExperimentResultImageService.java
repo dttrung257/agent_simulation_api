@@ -1,15 +1,21 @@
 package com.uet.agent_simulation_api.services.experiment_result_image;
 
 import com.uet.agent_simulation_api.constant.AppConst;
+import com.uet.agent_simulation_api.exceptions.errors.ExperimentResultErrors;
 import com.uet.agent_simulation_api.exceptions.errors.ExperimentResultImageErrors;
-import com.uet.agent_simulation_api.exceptions.experiment_result_images.ExperimentResultImageDataReadException;
-import com.uet.agent_simulation_api.exceptions.experiment_result_images.ExperimentResultImageNotFoundException;
+import com.uet.agent_simulation_api.exceptions.experiment_result.ExperimentResultNotFoundException;
+import com.uet.agent_simulation_api.exceptions.experiment_result_image.ExperimentResultImageDataReadException;
+import com.uet.agent_simulation_api.exceptions.experiment_result_image.ExperimentResultImageNotFoundException;
 import com.uet.agent_simulation_api.exceptions.node.CannotFetchNodeDataException;
 import com.uet.agent_simulation_api.models.ExperimentResultImage;
 import com.uet.agent_simulation_api.models.projections.ExperimentResultImageDetailProjection;
 import com.uet.agent_simulation_api.repositories.ExperimentResultImageRepository;
+import com.uet.agent_simulation_api.repositories.ExperimentResultRepository;
 import com.uet.agent_simulation_api.responses.Pagination;
+import com.uet.agent_simulation_api.responses.experiment_result_image.ExperimentResultImageCategoryResponse;
 import com.uet.agent_simulation_api.responses.experiment_result_image.ExperimentResultImageDetailResponse;
+import com.uet.agent_simulation_api.responses.experiment_result_image.ExperimentResultImageListResponse;
+import com.uet.agent_simulation_api.responses.experiment_result_image.ExperimentResultImageStepResponse;
 import com.uet.agent_simulation_api.services.auth.IAuthService;
 import com.uet.agent_simulation_api.services.image.IImageService;
 import com.uet.agent_simulation_api.services.node.INodeService;
@@ -26,7 +32,9 @@ import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -36,6 +44,7 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
     private final IAuthService authService;
     private final INodeService nodeService;
     private final IImageService imageService;
+    private final ExperimentResultRepository experimentResultRepository;
     private final ExperimentResultImageRepository experimentResultImageRepository;
 
     @Override
@@ -222,5 +231,70 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
         final var image = getImageData(id);
 
         return Base64.getEncoder().encodeToString(image.data());
+    }
+
+    @Override
+    public ExperimentResultImageListResponse getByRange(BigInteger experimentResultId, Integer startStep, Integer endStep) {
+        final var experimentResult = experimentResultRepository.findById(experimentResultId)
+                .orElseThrow(() -> new ExperimentResultNotFoundException(ExperimentResultErrors.E_ER_0001.defaultMessage()));
+
+        if (!nodeService.getCurrentNodeId().equals(experimentResult.getNodeId())) {
+            return getExperimentResultImageFromNode(experimentResultId, startStep, endStep, experimentResult.getNodeId());
+        }
+
+        final var imageData = experimentResultImageRepository.findByRange(experimentResultId, startStep, endStep,
+                authService.getCurrentUserId());
+
+        final var steps = imageData.stream().map(ExperimentResultImage::getStep).distinct().toList();
+        final var stepsData = new ArrayList<ExperimentResultImageStepResponse>();
+        final var seen = new HashSet<>();
+        steps.forEach(step -> {
+            imageData.forEach(image -> {
+                if (image.getStep().equals(step) && !seen.contains(step)) {
+                    seen.add(step);
+                    stepsData.add(new ExperimentResultImageStepResponse(step, new ArrayList<>()));
+                }
+            });
+        });
+
+        stepsData.forEach(stepData -> {
+            imageData.forEach(image -> {
+                if (image.getStep().equals(stepData.step())) {
+                    final var base64EncodedImage = imageService.getImageDataEncoded(image.getLocation());
+                    stepData.categories().add(new ExperimentResultImageCategoryResponse(
+                            image.getExperimentResultCategoryId(), base64EncodedImage));
+                }
+            });
+        });
+
+        return new ExperimentResultImageListResponse(stepsData);
+    }
+
+    private ExperimentResultImageListResponse getExperimentResultImageFromNode(BigInteger experimentResultId, Integer startStep, Integer endStep, Integer nodeId) {
+        final var webClient = nodeService.getWebClientByNodeId(nodeId);
+
+        return fetchExperimentResultImageFromNode(webClient, experimentResultId, startStep, endStep);
+    }
+
+    private ExperimentResultImageListResponse fetchExperimentResultImageFromNode(WebClient webClient, BigInteger experimentResultId, Integer startStep, Integer endStep) {
+        try {
+            final var response = webClient.get().uri(
+                uriBuilder -> uriBuilder.path("/api/v1/experiment_result_images")
+                    .queryParam("experiment_result_id", experimentResultId)
+                    .queryParam("start_step", startStep)
+                    .queryParam("end_step", endStep)
+                    .build()
+            ).retrieve().bodyToMono(ExperimentResultImageListResponse.class).block();
+
+            if (response == null) {
+                throw new ExperimentResultImageNotFoundException(ExperimentResultImageErrors.E_ERI_0001.defaultMessage());
+            }
+
+            return response;
+        } catch (Exception e) {
+            log.error("Error while fetching experiment result image from node: {}", e.getMessage());
+
+            throw new CannotFetchNodeDataException(e.getMessage());
+        }
     }
 }

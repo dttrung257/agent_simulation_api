@@ -21,12 +21,14 @@ public interface ExperimentResultRepository extends JpaRepository<ExperimentResu
             AND (:experiment_id IS NULL OR e.id = :experiment_id)
             AND (:model_id IS NULL OR e.modelId = :model_id)
             AND (:project_id IS NULL OR e.projectId = :project_id)
+            AND (:node_id IS NULL OR er.nodeId = :node_id)
         """
     )
     List<ExperimentResult> find(@Param("user_id") BigInteger userId,
             @Param("experiment_id") BigInteger experimentId,
             @Param("model_id") BigInteger modelId,
-            @Param("project_id") BigInteger projectId);
+            @Param("project_id") BigInteger projectId,
+            @Param("node_id") Integer nodeId);
 
     @Transactional
     @Modifying

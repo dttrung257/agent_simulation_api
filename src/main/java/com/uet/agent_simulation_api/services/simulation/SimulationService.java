@@ -182,7 +182,8 @@ public class SimulationService implements ISimulationService {
             final var runLegacyCommand = gamaCommandBuilder.buildLegacy(null, pathToExperimentPlanXmlFile, pathToLocalExperimentOutputDir);
 
             // Recreate experiment result.
-            final var experimentResult = experimentResultService.recreate(experimentReq.getExperiment(), finalStep);
+            final var experimentResult = experimentResultService.recreate(experimentReq.getExperiment(), finalStep,
+                    pathToLocalExperimentOutputDir);
 
             // Execute legacy command.
             executeLegacy(createXmlCommand, runLegacyCommand, pathToExperimentPlanXmlFile,

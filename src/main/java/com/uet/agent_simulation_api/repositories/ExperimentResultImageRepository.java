@@ -65,6 +65,20 @@ public interface ExperimentResultImageRepository extends JpaRepository<Experimen
     Optional<ExperimentResultImageDetailProjection> findDetailById(@Param("id") BigInteger id,
         @Param("user_id") BigInteger userId);
 
+    @Query(
+        value = """
+            SELECT eri FROM ExperimentResultImage eri
+            JOIN ExperimentResult er ON eri.experimentResultId = er.id
+            JOIN Experiment e ON er.experimentId = e.id
+            WHERE eri.experimentResultId = :experiment_result_id
+            AND eri.step >= :start_step
+            AND eri.step <= :end_step
+            AND e.userId = :user_id
+        """
+    )
+    List<ExperimentResultImage> findByRange(@Param("experiment_result_id") BigInteger experimentResultId, @Param("start_step") Integer startStep,
+        @Param("end_step") Integer endStep, @Param("user_id") BigInteger userId);
+
     @Transactional
     @Modifying
     @Query("DELETE FROM ExperimentResultImage eri WHERE eri.experimentResultId = :experiment_result_id")

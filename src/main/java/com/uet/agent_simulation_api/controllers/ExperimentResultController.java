@@ -6,6 +6,7 @@ import com.uet.agent_simulation_api.services.experiment_result.IExperimentResult
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,7 +33,18 @@ public class ExperimentResultController {
     public ResponseEntity<SuccessResponse> get(
             @RequestParam(name = "experiment_id", required = false) BigInteger experimentId,
             @RequestParam(name = "model_id", required = false) BigInteger modelId,
-            @RequestParam(name = "project_id", required = false) BigInteger projectId) {
-        return responseHandler.respondSuccess(experimentResultService.get(experimentId, modelId, projectId));
+            @RequestParam(name = "project_id", required = false) BigInteger projectId,
+            @RequestParam(name = "node_id", required = false) Integer nodeId) {
+        return responseHandler.respondSuccess(experimentResultService.get(experimentId, modelId, projectId, nodeId));
+    }
+
+    /**
+     * Check process.
+     *
+     * @return ResponseEntity<SuccessResponse>
+     */
+    @GetMapping("/{id}/progress")
+    public ResponseEntity<SuccessResponse> getExperimentProgress(@PathVariable BigInteger id) {
+        return responseHandler.respondSuccess(experimentResultService.getExperimentProgress(id));
     }
 }

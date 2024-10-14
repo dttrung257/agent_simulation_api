@@ -3,3 +3,4 @@ cluster:
   node_role: 1
   host: localhost
   port: 9999
+  node_name: master

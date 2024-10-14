@@ -20,4 +20,12 @@ public interface IImageService {
      * @return The media type of the image.
      */
     MediaType getImageMediaType(String extension);
+
+    /**
+     * Get the encoded data of an image file.
+     *
+     * @param filePath The path to the image file.
+     * @return The encoded data of the image file.
+     */
+    String getImageDataEncoded(String filePath);
 }

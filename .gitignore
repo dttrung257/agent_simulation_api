@@ -35,6 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+## project files
 logs/*.log
 application.yml
 application-*.yml

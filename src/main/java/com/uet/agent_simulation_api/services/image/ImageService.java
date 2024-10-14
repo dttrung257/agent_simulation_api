@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
@@ -77,5 +78,21 @@ public class ImageService implements IImageService {
             case "gif" -> MediaType.IMAGE_GIF;
             default -> MediaType.APPLICATION_OCTET_STREAM;
         };
+    }
+
+    @Override
+    public String getImageDataEncoded(String filePath) {
+        final var path = Paths.get(filePath);
+        if (!Files.exists(path)) {
+            return null;
+        }
+
+        try {
+            return Base64.getEncoder().encodeToString(Files.readAllBytes(path));
+        } catch (Exception e) {
+            log.error("Error while reading image file: {}", e.getMessage());
+
+            return null;
+        }
     }
 }

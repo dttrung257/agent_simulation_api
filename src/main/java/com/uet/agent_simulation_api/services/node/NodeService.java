@@ -26,6 +26,9 @@ public class NodeService implements INodeService {
     @Value("${cluster.config.path}")
     private String clusterConfigPath;
 
+    @Value("${webflux.body.max_size_mb}")
+    private Integer webFluxBodyMaxSize;
+
     @Override
     public Node getCurrentNode() {
         final var nodeId = fileUtil.getValueByKey(clusterConfigPath, "node_id");
@@ -60,6 +63,7 @@ public class NodeService implements INodeService {
             final var url = getNodeUrl(node);
 
             return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient))
+                    .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(webFluxBodyMaxSize * 1024 * 1024))
                     .baseUrl(url).build();
         } catch (Exception e) {
             throw new CannotConnectToNodeException("Cannot connect to node: " + node.getName());

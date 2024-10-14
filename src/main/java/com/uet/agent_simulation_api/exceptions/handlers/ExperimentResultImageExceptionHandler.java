@@ -2,8 +2,8 @@ package com.uet.agent_simulation_api.exceptions.handlers;
 
 import com.uet.agent_simulation_api.exceptions.ErrorResponse;
 import com.uet.agent_simulation_api.exceptions.errors.ExperimentResultImageErrors;
-import com.uet.agent_simulation_api.exceptions.experiment_result_images.ExperimentResultImageDataReadException;
-import com.uet.agent_simulation_api.exceptions.experiment_result_images.ExperimentResultImageNotFoundException;
+import com.uet.agent_simulation_api.exceptions.experiment_result_image.ExperimentResultImageDataReadException;
+import com.uet.agent_simulation_api.exceptions.experiment_result_image.ExperimentResultImageNotFoundException;
 import com.uet.agent_simulation_api.responses.ResponseHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.Ordered;

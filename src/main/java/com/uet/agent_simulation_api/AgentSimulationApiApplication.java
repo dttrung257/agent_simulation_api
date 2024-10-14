@@ -97,7 +97,9 @@ public class AgentSimulationApiApplication implements CommandLineRunner {
 	}
 
 	/**
-	 * Check if the node host is valid.
+	 * If cannot access config file to get node host, return false.
+	 * If node host is empty, set default value to localhost.
+	 * If node port is empty, set default value to server port.
 	 *
 	 * @return true if the node host is valid, false otherwise.
 	 */
@@ -111,18 +113,22 @@ public class AgentSimulationApiApplication implements CommandLineRunner {
 			return false;
 		}
 
-		if (nodeHost.isEmpty()) {
-			log.info("Node host undefined in application.yml. Start setting node host");
+		if (nodePort == null) {
+			log.error("An error occurred while getting the node port");
 
-			fileUtil.findAndWrite(clusterConfigPath, "host", "localhost");
-			return true;
+			return false;
 		}
 
-		if (nodePort == null || nodePort.isEmpty()) {
-			log.info("Node port undefined in application.yml. Start setting node port");
+		if (nodeHost.isEmpty()) {
+			log.info("Node host undefined in config file. Start setting node host");
+
+			fileUtil.findAndWrite(clusterConfigPath, "host", "localhost");
+		}
+
+		if (nodePort.isEmpty()) {
+			log.info("Node port undefined in config file. Start setting node port");
 
 			fileUtil.findAndWrite(clusterConfigPath, "port", serverPort.toString());
-			return true;
 		}
 
 		return true;
@@ -132,23 +138,26 @@ public class AgentSimulationApiApplication implements CommandLineRunner {
 	 * Initialize the node.
 	 */
 	private void initNode() {
-		final var node = nodeRepository.findById(1);
 		final var host = fileUtil.getValueByKey(clusterConfigPath, "host");
 		final var port = fileUtil.getValueByKey(clusterConfigPath, "port");
+		final var nodeName = fileUtil.getValueByKey(clusterConfigPath, "node_name");
+		final var node = nodeRepository.findById(1);
 
 		if (node.isEmpty()) {
-			nodeRepository.save(
-				Node.builder()
-						.id(1).name("master").role(1)
-						.host(host)
-						.port(Integer.parseInt(port))
-						.createdBy("system")
-						.updatedBy("system")
-						.build());
+			nodeRepository.save(Node.builder()
+				.name(nodeName)
+				.role(1)
+				.host(host)
+				.port(Integer.parseInt(port))
+				.createdBy("system")
+				.updatedBy("system")
+				.build());
 
 			return;
 		}
 
+		node.get().setName(nodeName);
+		node.get().setRole(1);
 		node.get().setHost(host);
 		node.get().setPort(Integer.parseInt(port));
 		node.get().setCreatedBy("system");

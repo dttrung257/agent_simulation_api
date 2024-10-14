@@ -6,8 +6,8 @@ import java.math.BigInteger;
  * SuccessResponse class
  */
 public record SuccessResponse(
-        String status,
-        int statusCode,
-        BigInteger total,
-        Object data
+    String status,
+    int statusCode,
+    BigInteger total,
+    Object data
 ) { }
