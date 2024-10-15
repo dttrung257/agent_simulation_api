@@ -7,6 +7,7 @@ import com.uet.agent_simulation_api.exceptions.node.CannotFetchNodeDataException
 import com.uet.agent_simulation_api.models.Experiment;
 import com.uet.agent_simulation_api.models.ExperimentResult;
 import com.uet.agent_simulation_api.repositories.ExperimentResultRepository;
+import com.uet.agent_simulation_api.requests.simulation.CreateClusterSimulationRequest;
 import com.uet.agent_simulation_api.responses.exeperiment_result.ExperimentProgressResponse;
 import com.uet.agent_simulation_api.services.auth.IAuthService;
 import com.uet.agent_simulation_api.services.node.INodeService;
@@ -19,6 +20,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -123,5 +125,37 @@ public class ExperimentResultService implements IExperimentResultService {
 
             throw new CannotFetchNodeDataException(e.getMessage());
         }
+    }
+
+    @Override
+    public HashMap<String, BigInteger> getCurrentExperimentResultIds(CreateClusterSimulationRequest request) {
+        final var resultLastId = new HashMap<String, BigInteger>();
+        request.getSimulationRequests().forEach((simulationRequest) -> {
+            final var nodeId = simulationRequest.getNodeId();
+            final var projectId = simulationRequest.getProjectId();
+
+            simulationRequest.getExperiments().forEach((experiment) -> {
+                final var experimentId = experiment.getId();
+                final var modelId = experiment.getModelId();
+                final var userId = authService.getCurrentUserId();
+                final var experimentResultList = experimentResultRepository.find(userId, experimentId, modelId, projectId, nodeId);
+
+                if (experimentResultList.isEmpty()) {
+                    final var key = nodeId + "-" + projectId + "-" + modelId + "-" + experimentId;
+                    resultLastId.put(key, BigInteger.ZERO);
+                } else {
+                    experimentResultList.forEach((result) -> {
+                        final var key = nodeId + "-" + projectId + "-" + modelId + "-" + experimentId;
+                        final var lastId = resultLastId.getOrDefault(key, BigInteger.ZERO);
+
+                        if (lastId.compareTo(result.getId()) < 0) {
+                            resultLastId.put(key, result.getId());
+                        }
+                    });
+                }
+            });
+        });
+
+        return resultLastId;
     }
 }

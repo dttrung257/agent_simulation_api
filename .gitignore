@@ -42,3 +42,4 @@ application.yml
 application-*.yml
 .workspace*/
 docker-compose.yml
+cluster-config.yml
