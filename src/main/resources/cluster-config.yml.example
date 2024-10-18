@@ -3,4 +3,4 @@ cluster:
   node_role:
   host:
   port:
-  node_name: 
+  node_name:

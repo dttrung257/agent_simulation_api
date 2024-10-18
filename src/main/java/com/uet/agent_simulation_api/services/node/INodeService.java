@@ -3,7 +3,11 @@ package com.uet.agent_simulation_api.services.node;
 import com.uet.agent_simulation_api.models.Node;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.List;
+
 public interface INodeService {
+    List<Node> get();
+
     Node getCurrentNode();
 
     /**

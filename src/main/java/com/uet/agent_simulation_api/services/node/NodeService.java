@@ -15,6 +15,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
 import java.time.Duration;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +29,11 @@ public class NodeService implements INodeService {
 
     @Value("${webflux.body.max_size_mb}")
     private Integer webFluxBodyMaxSize;
+
+    @Override
+    public List<Node> get() {
+        return nodeRepository.find();
+    }
 
     @Override
     public Node getCurrentNode() {
