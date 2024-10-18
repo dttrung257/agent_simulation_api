@@ -5,6 +5,7 @@ import com.uet.agent_simulation_api.exceptions.node.CannotConnectToNodeException
 import com.uet.agent_simulation_api.exceptions.node.NodeNotFoundException;
 import com.uet.agent_simulation_api.models.Node;
 import com.uet.agent_simulation_api.repositories.NodeRepository;
+import com.uet.agent_simulation_api.responses.node.NodeBriefResponse;
 import com.uet.agent_simulation_api.utils.FileUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
 import java.time.Duration;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +30,12 @@ public class NodeService implements INodeService {
 
     @Value("${webflux.body.max_size_mb}")
     private Integer webFluxBodyMaxSize;
+
+    @Override
+    public List<NodeBriefResponse> get() {
+        return nodeRepository.find().stream().map(node ->
+            new NodeBriefResponse(node.getId(), node.getName(), node.getRole())).toList();
+    }
 
     @Override
     public Node getCurrentNode() {

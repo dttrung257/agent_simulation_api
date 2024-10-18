@@ -24,6 +24,8 @@ public class CreateSimulationRequest {
 
     private String projectLocation;
 
+    private Integer order;
+
     @Valid
     @NotNull
     private List<CreateExperimentRequest> experiments;

@@ -7,5 +7,6 @@ public record RunSimulationResponse(
     BigInteger projectId,
     BigInteger modelId,
     BigInteger experimentId,
-    BigInteger experimentResultId
+    BigInteger experimentResultId,
+    Integer order
 ) {}
