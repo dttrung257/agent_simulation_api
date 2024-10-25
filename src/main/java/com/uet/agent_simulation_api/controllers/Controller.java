@@ -3,6 +3,7 @@ package com.uet.agent_simulation_api.controllers;
 import com.uet.agent_simulation_api.responses.ResponseHandler;
 import com.uet.agent_simulation_api.responses.SuccessResponse;
 import com.uet.agent_simulation_api.services.node.INodeService;
+import com.uet.agent_simulation_api.utils.FileUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +22,7 @@ import java.time.Duration;
 @RequiredArgsConstructor
 @Slf4j
 public class Controller {
+    private final FileUtil fileUtil;
     private final INodeService nodeService;
     private final ResponseHandler ResponseHandler;
 
@@ -58,5 +60,11 @@ public class Controller {
             log.error("Error: {}", e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    @GetMapping("zip_folder")
+    public ResponseEntity<SuccessResponse> zipFolder() {
+        fileUtil.zipFolderAsync("storage/outputs/node-1_user-1_project-1_model-19_experiment-6_result-1_simulator-06-Transmit");
+        return ResponseHandler.respondSuccess("Ok");
     }
 }

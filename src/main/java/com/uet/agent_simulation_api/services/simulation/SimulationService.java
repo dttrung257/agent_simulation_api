@@ -27,6 +27,7 @@ import com.uet.agent_simulation_api.services.image.IImageService;
 import com.uet.agent_simulation_api.services.node.INodeService;
 import com.uet.agent_simulation_api.services.s3.IS3Service;
 import com.uet.agent_simulation_api.utils.ConvertUtil;
+import com.uet.agent_simulation_api.utils.FileUtil;
 import com.uet.agent_simulation_api.utils.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -68,6 +69,7 @@ public class SimulationService implements ISimulationService {
     private final IExperimentResultService experimentResultService;
     private final ExperimentResultImageRepository experimentResultImageRepository;
     private final ExperimentResultCategoryRepository experimentResultCategoryRepository;
+    private final FileUtil fileUtil;
 
     @Value("${app.project.path}")
     private String projectPath;
@@ -261,10 +263,10 @@ public class SimulationService implements ISimulationService {
                     executeCommandFuture.whenComplete((executeCommandResult, executeCommandError) -> {
                         if (executeCommandError != null) {
                             log.error("Error while running simulation", executeCommandError);
-
                             clearLocalResource(pathToLocalExperimentOutputDir);
                             clearLocalResource(pathToExperimentPlanXmlFile);
                             experimentResultService.updateStatus(experimentResult, ExperimentResultStatusConst.FAILED);
+
                             return;
                         }
 
@@ -317,7 +319,7 @@ public class SimulationService implements ISimulationService {
 
         log.info("Start clear old output directory: {}", dir);
         try {
-            final var process = processBuilder.command("bash", "-c", "rm -rf " + dir).start();
+            final var process = processBuilder.command("bash", "-c", "rm -rf " + dir + "*").start();
 
             log.info("Successfully clear old output directory: {}", dir);
         } catch (Exception e) {
@@ -339,7 +341,7 @@ public class SimulationService implements ISimulationService {
             log.info("Start clear old output directory: " + dir);
 
             try {
-                processBuilder.command("bash", "-c", "rm -rf " + dir).start().waitFor();
+                processBuilder.command("bash", "-c", "rm -rf " + dir + "*").start().waitFor();
                 log.info("Successfully clear old output directory: " + dir);
             } catch (Exception e) {
                 throw new CannotClearOldSimulationOutputException(e.getMessage());
@@ -392,6 +394,29 @@ public class SimulationService implements ISimulationService {
 
         // Update experiment result status.
         experimentResultService.updateStatus(experimentResult, ExperimentResultStatusConst.FINISHED);
+
+        // Prepare for download.
+        prepareForDownload(experimentResult, experimentResultLocation);
+    }
+
+    /**
+     * This method is used to prepare for download.
+     *
+     * @param experimentResult ExperimentResult
+     * @param resultLocation String
+     */
+    private void prepareForDownload(ExperimentResult experimentResult, String resultLocation) {
+        virtualThreadExecutor.submit(() -> {
+            if (experimentResult.getStatus() != ExperimentResultStatusConst.FINISHED) {
+                log.error("Experiment result is not finished, cannot prepare for download");
+                return;
+            }
+
+            final var isSuccess = fileUtil.zipFolder(resultLocation);
+            if (!isSuccess) return;
+
+            experimentResultService.updateStatus(experimentResult, ExperimentResultStatusConst.READY_FOR_DOWNLOAD);
+        });
     }
 
 //    /**

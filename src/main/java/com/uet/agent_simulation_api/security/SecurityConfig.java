@@ -59,7 +59,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "api/v1/health").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "api/v1/experiment_result_images/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "api/v1/webclient_test").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "api/v1/experiment_results/{id}/download").permitAll()
 
                         .anyRequest().authenticated()
                 )

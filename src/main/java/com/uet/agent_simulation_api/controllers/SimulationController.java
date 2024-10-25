@@ -25,7 +25,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -76,16 +80,15 @@ public class SimulationController {
         request.getSimulationRequests().forEach((simulationRequest) -> {
             if (simulationRequest.getNodeId().equals(nodeService.getCurrentNodeId())) {
                 currentNodeSimulationRequests.add(simulationRequest);
-                return;
+            } else {
+                final var message = RunSimulation.builder()
+                        .nodeId(simulationRequest.getNodeId())
+                        .command(PubSubCommands.RUN_SIMULATION)
+                        .simulation(simulationRequest)
+                        .build();
+
+                messagePublisher.publish(message);
             }
-
-            final var message = RunSimulation.builder()
-                .nodeId(simulationRequest.getNodeId())
-                .command(PubSubCommands.RUN_SIMULATION)
-                .simulation(simulationRequest)
-                .build();
-
-            messagePublisher.publish(message);
         });
         currentNodeSimulationRequests.forEach(simulationService::run);
 

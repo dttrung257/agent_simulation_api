@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Optional;
 
 public interface ExperimentResultRepository extends JpaRepository<ExperimentResult, BigInteger> {
     List<ExperimentResult> findByExperimentId(BigInteger experimentId);
@@ -29,6 +30,16 @@ public interface ExperimentResultRepository extends JpaRepository<ExperimentResu
             @Param("model_id") BigInteger modelId,
             @Param("project_id") BigInteger projectId,
             @Param("node_id") Integer nodeId);
+
+    @Query(
+        value = """
+            SELECT er FROM ExperimentResult er
+            JOIN Experiment e ON er.experimentId = e.id
+            WHERE e.userId = :user_id
+            AND er.id = :id
+        """
+    )
+    Optional<ExperimentResult> findByIdAndUserId(@Param("id") BigInteger id, @Param("user_id") BigInteger userId);
 
     @Transactional
     @Modifying

@@ -4,6 +4,9 @@ import com.uet.agent_simulation_api.responses.ResponseHandler;
 import com.uet.agent_simulation_api.responses.SuccessResponse;
 import com.uet.agent_simulation_api.services.experiment_result.IExperimentResultService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,6 +41,11 @@ public class ExperimentResultController {
         return responseHandler.respondSuccess(experimentResultService.get(experimentId, modelId, projectId, nodeId));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<SuccessResponse> recreate(@PathVariable BigInteger id) {
+        return responseHandler.respondSuccess(experimentResultService.getDetails(id));
+    }
+
     /**
      * Check process.
      *
@@ -46,5 +54,16 @@ public class ExperimentResultController {
     @GetMapping("/{id}/progress")
     public ResponseEntity<SuccessResponse> getExperimentProgress(@PathVariable BigInteger id) {
         return responseHandler.respondSuccess(experimentResultService.getExperimentProgress(id));
+    }
+
+    @GetMapping("/{id}/download")
+    public ResponseEntity<InputStreamResource> download(@PathVariable BigInteger id) {
+        final var result = experimentResultService.download(id);
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + result.filename())
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .contentLength(result.fileSize())
+            .body(result.resource());
     }
 }
