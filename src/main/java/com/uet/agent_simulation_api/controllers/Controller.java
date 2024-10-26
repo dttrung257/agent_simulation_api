@@ -4,18 +4,12 @@ import com.uet.agent_simulation_api.responses.ResponseHandler;
 import com.uet.agent_simulation_api.responses.SuccessResponse;
 import com.uet.agent_simulation_api.services.node.INodeService;
 import com.uet.agent_simulation_api.utils.FileUtil;
+import com.uet.agent_simulation_api.utils.ThreadUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.netty.http.client.HttpClient;
-
-import java.time.Duration;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -23,6 +17,7 @@ import java.time.Duration;
 @Slf4j
 public class Controller {
     private final FileUtil fileUtil;
+    private final ThreadUtil threadUtil;
     private final INodeService nodeService;
     private final ResponseHandler ResponseHandler;
 
@@ -42,29 +37,51 @@ public class Controller {
         return ResponseHandler.respondSuccess(nodeService.getCurrentNode());
     }
 
-    @GetMapping("/webclient_test")
-    public ResponseEntity<SuccessResponse> webClientTest() {
-        final var httpClient = HttpClient.create().responseTimeout(Duration.ofSeconds(3));
-        final var webClient = WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient))
-                .baseUrl("http://localhost:9998").build();
+//    @GetMapping("/webclient_test")
+//    public ResponseEntity<SuccessResponse> webClientTest() {
+//        final var httpClient = HttpClient.create().responseTimeout(Duration.ofSeconds(3));
+//        final var webClient = WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient))
+//                .baseUrl("http://localhost:9998").build();
+//
+//        try {
+//            String res = webClient.get()
+//                    .uri("/api/v1/health")
+//                    .retrieve()
+//                    .bodyToMono(String.class)
+//                    .block();
+//
+//            return ResponseHandler.respondSuccess(res);
+//        } catch (Exception e) {
+//            log.error("Error: {}", e.getMessage());
+//            throw new RuntimeException(e);
+//        }
+//    }
+//
+//    @GetMapping("zip_folder")
+//    public ResponseEntity<SuccessResponse> zipFolder() {
+//        fileUtil.zipFolderAsync("storage/outputs/node-1_user-1_project-1_model-19_experiment-6_result-1_simulator-06-Transmit");
+//        return ResponseHandler.respondSuccess("Ok");
+//    }
 
-        try {
-            String res = webClient.get()
-                    .uri("/api/v1/health")
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
+    @DeleteMapping("/threads/{id}")
+    public ResponseEntity<SuccessResponse> killThread(@PathVariable long id) {
+        threadUtil.showAll();
+        threadUtil.killThread(id);
 
-            return ResponseHandler.respondSuccess(res);
-        } catch (Exception e) {
-            log.error("Error: {}", e.getMessage());
-            throw new RuntimeException(e);
-        }
+        return ResponseHandler.respondSuccess("OK");
     }
 
-    @GetMapping("zip_folder")
-    public ResponseEntity<SuccessResponse> zipFolder() {
-        fileUtil.zipFolderAsync("storage/outputs/node-1_user-1_project-1_model-19_experiment-6_result-1_simulator-06-Transmit");
-        return ResponseHandler.respondSuccess("Ok");
+    @GetMapping("/threads")
+    public ResponseEntity<SuccessResponse> showAllThreads() {
+        threadUtil.showAll();
+
+        return ResponseHandler.respondSuccess("OK");
+    }
+
+    @DeleteMapping("/processes/{pid}")
+    public ResponseEntity<SuccessResponse> killProcess(@PathVariable long pid) {
+        threadUtil.killProcessById(pid);
+
+        return ResponseHandler.respondSuccess("OK");
     }
 }

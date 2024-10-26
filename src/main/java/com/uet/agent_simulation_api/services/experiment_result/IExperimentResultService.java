@@ -25,4 +25,6 @@ public interface IExperimentResultService {
     HashMap<String, BigInteger> getCurrentExperimentResultIds(CreateClusterSimulationRequest request);
 
     DownloadExperimentResultResponse download(BigInteger id);
+
+    void stop(BigInteger id);
 }

@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS experiment_results (
     updated_by VARCHAR(255),
     node_id INTEGER NOT NULL,
     status TINYINT NOT NULL,
+    run_command_pid BIGINT,
     PRIMARY KEY (`id`),
     CONSTRAINT fk_experiment_results_experiment_id FOREIGN KEY (experiment_id) REFERENCES experiments(id)
     ON UPDATE RESTRICT ON DELETE CASCADE,

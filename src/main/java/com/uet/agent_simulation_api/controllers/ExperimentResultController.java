@@ -8,11 +8,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigInteger;
 
@@ -41,6 +37,13 @@ public class ExperimentResultController {
         return responseHandler.respondSuccess(experimentResultService.get(experimentId, modelId, projectId, nodeId));
     }
 
+    /**
+     * Get experiment result details.
+     *
+     * @param id BigInteger
+     *
+     * @return ResponseEntity<SuccessResponse>
+     */
     @GetMapping("/{id}")
     public ResponseEntity<SuccessResponse> recreate(@PathVariable BigInteger id) {
         return responseHandler.respondSuccess(experimentResultService.getDetails(id));
@@ -56,6 +59,13 @@ public class ExperimentResultController {
         return responseHandler.respondSuccess(experimentResultService.getExperimentProgress(id));
     }
 
+    /**
+     * Download experiment result.
+     *
+     * @param id BigInteger
+     *
+     * @return ResponseEntity<InputStreamResource>
+     */
     @GetMapping("/{id}/download")
     public ResponseEntity<InputStreamResource> download(@PathVariable BigInteger id) {
         final var result = experimentResultService.download(id);
@@ -65,5 +75,12 @@ public class ExperimentResultController {
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .contentLength(result.fileSize())
             .body(result.resource());
+    }
+
+    @DeleteMapping("/{id}/stop")
+    public ResponseEntity<SuccessResponse> stop(@PathVariable BigInteger id) {
+        experimentResultService.stop(id);
+
+        return responseHandler.respondSuccess("OK");
     }
 }
