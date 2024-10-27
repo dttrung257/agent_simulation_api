@@ -51,16 +51,18 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests((requests) -> requests
                         // Auth endpoints - public
-                        .requestMatchers(HttpMethod.POST, "api/v1/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "api/v1/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, "api/v1/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh").permitAll()
 
                         // Health check
-                        .requestMatchers(HttpMethod.GET, "api/v1/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/health").permitAll()
 
-//                        .requestMatchers(HttpMethod.GET, "api/v1/experiment_result_images/**").permitAll()
+                        // .requestMatchers(HttpMethod.GET, "/api/v1/experiment_result_images/**").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "api/v1/experiment_results/{id}/download").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/experiment_results/{id}/download").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/actuator/**").permitAll()
 
                         .anyRequest().authenticated()
                 )
