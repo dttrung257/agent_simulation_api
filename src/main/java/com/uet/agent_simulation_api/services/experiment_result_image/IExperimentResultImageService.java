@@ -5,6 +5,7 @@ import com.uet.agent_simulation_api.responses.Pagination;
 import com.uet.agent_simulation_api.responses.SuccessResponse;
 import com.uet.agent_simulation_api.responses.experiment_result_image.ExperimentResultImageDetailResponse;
 import com.uet.agent_simulation_api.responses.experiment_result_image.ExperimentResultImageListResponse;
+import reactor.core.publisher.Flux;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -19,4 +20,8 @@ public interface IExperimentResultImageService {
     String getImageDataEncoded(BigInteger id);
 
     ExperimentResultImageListResponse getByRange(BigInteger experimentResultId, Integer startStep, Integer endStep);
+
+    Flux<ExperimentResultImageListResponse> getAnimatedImages(BigInteger experimentResultId, Integer startStep, Integer endStep, long duration);
+
+    Flux<ExperimentResultImageListResponse> getMultiExperimentAnimatedImages(String experimentResultIds, Integer startStep, Integer endStep, long duration);
 }
