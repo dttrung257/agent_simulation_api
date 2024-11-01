@@ -18,7 +18,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,8 +44,8 @@ public class SimulationController {
     private final IExperimentResultService experimentResultService;
     private final ExperimentResultRepository experimentResultRepository;
 
-    private static final int RETRY_DELAY = 300;
-    private static final int MAX_RETRIES = 5;
+    private static final int RETRY_DELAY = 500;
+    private static final int MAX_RETRIES = 10;
 
     @PostMapping
     public ResponseEntity<SuccessResponse> runSimulation(@Valid @RequestBody CreateSimulationRequest request) {
@@ -61,7 +60,7 @@ public class SimulationController {
             final var experimentId = experiment.getId();
             final var modelId = experiment.getModelId();
             final var userId = authService.getCurrentUserId();
-            final var experimentResultList = experimentResultRepository.find(userId, experimentId, modelId, projectId, nodeId);
+            final var experimentResultList = experimentResultRepository.find(userId, experimentId, modelId, projectId, nodeId, null);
                 experimentResultList.forEach((result) -> {
                     resultIdList.add(new RunSimulationResponse(nodeId, projectId, modelId, experimentId, result.getId(), order));
                 });
@@ -72,6 +71,8 @@ public class SimulationController {
 
     @PostMapping("/cluster")
     public ResponseEntity<SuccessResponse> runSimulationCluster(@Valid @RequestBody CreateClusterSimulationRequest request) {
+        request = experimentResultService.generateResultNumber(request);
+
         // Get current result ids.
         final var oldResultIdMap = experimentResultService.getCurrentExperimentResultIds(request);
 
@@ -98,6 +99,7 @@ public class SimulationController {
             final var nodeId = simulationRequest.getNodeId();
             final var projectId = simulationRequest.getProjectId();
             final var order = simulationRequest.getOrder();
+            final var experimentResultNumber = simulationRequest.getNumber();
 
             return CompletableFuture.runAsync(() -> {
                 simulationRequest.getExperiments().forEach(experiment -> {
@@ -105,7 +107,7 @@ public class SimulationController {
                     final var modelId = experiment.getModelId();
                     final var userId = authService.getCurrentUserId();
 
-                    retryUntilNewResultFound(userId, experimentId, modelId, projectId, nodeId, oldResultIdMap, MAX_RETRIES).thenAccept(newResult -> {
+                    retryUntilNewResultFound(userId, experimentId, modelId, projectId, nodeId, oldResultIdMap, MAX_RETRIES, experimentResultNumber).thenAccept(newResult -> {
                         newResult.ifPresent(result -> {
                             resultIdList.add(new RunSimulationResponse(nodeId, projectId, modelId, experimentId, result.getId(), order));
                         });
@@ -120,12 +122,13 @@ public class SimulationController {
     }
 
     private CompletableFuture<Optional<ExperimentResult>> retryUntilNewResultFound(BigInteger userId,
-        BigInteger experimentId, BigInteger modelId, BigInteger projectId, Integer nodeId, Map<String, BigInteger> oldResultLastId, int maxRetries) {
+        BigInteger experimentId, BigInteger modelId, BigInteger projectId, Integer nodeId,
+        Map<String, BigInteger> oldResultLastId, int maxRetries, Integer experimentResultNumber) {
 
         return CompletableFuture.supplyAsync(() -> {
-            final var experimentResultList = experimentResultRepository.find(userId, experimentId, modelId, projectId, nodeId);
+            final var experimentResultList = experimentResultRepository.find(userId, experimentId, modelId, projectId, nodeId, experimentResultNumber);
             return experimentResultList.stream()
-                .filter(result -> result.getId().compareTo(oldResultLastId.get(nodeId + "-" + projectId + "-" + modelId + "-" + experimentId)) > 0)
+                .filter(result -> result.getId().compareTo(oldResultLastId.get(nodeId + "-" + projectId + "-" + modelId + "-" + experimentId + "-" + experimentResultNumber)) > 0)
                 .max(Comparator.comparing(ExperimentResult::getId));
         }).thenCompose(result -> {
             if (result.isPresent() || maxRetries <= 0) {
@@ -137,14 +140,9 @@ public class SimulationController {
                     } catch (Exception e) {
                         log.error("Error while waiting for new result: {}", e.getMessage());
                     }
-                    return retryUntilNewResultFound(userId, experimentId, modelId, projectId, nodeId, oldResultLastId, maxRetries - 1).join();
+                    return retryUntilNewResultFound(userId, experimentId, modelId, projectId, nodeId, oldResultLastId, maxRetries - 1, experimentResultNumber).join();
                 });
             }
         });
-    }
-
-    @GetMapping("/publish")
-    public ResponseEntity<SuccessResponse> publishSimulations() {
-        return responseHandler.respondSuccess("Simulation is published");
     }
 }

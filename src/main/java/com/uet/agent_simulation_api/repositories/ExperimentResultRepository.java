@@ -23,13 +23,15 @@ public interface ExperimentResultRepository extends JpaRepository<ExperimentResu
             AND (:model_id IS NULL OR e.modelId = :model_id)
             AND (:project_id IS NULL OR e.projectId = :project_id)
             AND (:node_id IS NULL OR er.nodeId = :node_id)
+            AND (:experiment_result_number IS NULL OR er.number = :experiment_result_number)
         """
     )
     List<ExperimentResult> find(@Param("user_id") BigInteger userId,
             @Param("experiment_id") BigInteger experimentId,
             @Param("model_id") BigInteger modelId,
             @Param("project_id") BigInteger projectId,
-            @Param("node_id") Integer nodeId);
+            @Param("node_id") Integer nodeId,
+            @Param("experiment_result_number") Integer experimentResultNumber);
 
     @Query(
         value = """
@@ -45,4 +47,15 @@ public interface ExperimentResultRepository extends JpaRepository<ExperimentResu
     @Modifying
     @Query("DELETE FROM ExperimentResult er WHERE er.experimentId = :experiment_id")
     void deleteByExperimentId(@Param("experiment_id") BigInteger experimentId);
+
+    @Transactional
+    @Modifying
+    @Query("""
+        DELETE FROM ExperimentResult er
+        WHERE er.experimentId = :experiment_id
+        AND er.number = :experiment_result_number
+        AND er.nodeId = :node_id
+    """)
+    void deleteByExperimentIdAndExperimentResultNumber(@Param("experiment_id") BigInteger experimentId,
+           @Param("experiment_result_number") Integer experimentResultNumber, @Param("node_id") Integer nodeId);
 }

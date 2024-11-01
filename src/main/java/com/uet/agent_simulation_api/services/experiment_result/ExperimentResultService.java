@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.FileInputStream;
@@ -27,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 @Service
@@ -41,7 +44,7 @@ public class ExperimentResultService implements IExperimentResultService {
 
     @Override
     public List<ExperimentResult> get(BigInteger experimentId, BigInteger modelId, BigInteger projectId, Integer nodeId) {
-        return experimentResultRepository.find(authService.getCurrentUserId(), experimentId, modelId, projectId, nodeId);
+        return experimentResultRepository.find(authService.getCurrentUserId(), experimentId, modelId, projectId, nodeId, null);
     }
 
     @Override
@@ -57,8 +60,8 @@ public class ExperimentResultService implements IExperimentResultService {
     }
 
     @Override
-    public ExperimentResult recreate(Experiment experiment, long finalStep, String outputDir) {
-        experimentResultRepository.deleteByExperimentId(experiment.getId());
+    public ExperimentResult recreate(Experiment experiment, long finalStep, String outputDir, Integer experimentResultNumber) {
+        experimentResultRepository.deleteByExperimentIdAndExperimentResultNumber(experiment.getId(), experimentResultNumber, nodeService.getCurrentNodeId());
 
         // Save new experiment result.
         return experimentResultRepository.save(ExperimentResult.builder()
@@ -67,6 +70,7 @@ public class ExperimentResultService implements IExperimentResultService {
                 .finalStep((int) finalStep)
                 .node(nodeService.getCurrentNode())
                 .status(ExperimentResultStatusConst.PENDING)
+                .number(experimentResultNumber)
                 .build());
     }
 
@@ -160,19 +164,20 @@ public class ExperimentResultService implements IExperimentResultService {
         request.getSimulationRequests().forEach((simulationRequest) -> {
             final var nodeId = simulationRequest.getNodeId();
             final var projectId = simulationRequest.getProjectId();
+            final var experimentResultNumber = simulationRequest.getNumber();
 
             simulationRequest.getExperiments().forEach((experiment) -> {
                 final var experimentId = experiment.getId();
                 final var modelId = experiment.getModelId();
                 final var userId = authService.getCurrentUserId();
-                final var experimentResultList = experimentResultRepository.find(userId, experimentId, modelId, projectId, nodeId);
+                final var experimentResultList = experimentResultRepository.find(userId, experimentId, modelId, projectId, nodeId, experimentResultNumber);
 
                 if (experimentResultList.isEmpty()) {
-                    final var key = nodeId + "-" + projectId + "-" + modelId + "-" + experimentId;
+                    final var key = nodeId + "-" + projectId + "-" + modelId + "-" + experimentId + "-" + experimentResultNumber;
                     resultLastId.put(key, BigInteger.ZERO);
                 } else {
                     experimentResultList.forEach((result) -> {
-                        final var key = nodeId + "-" + projectId + "-" + modelId + "-" + experimentId;
+                        final var key = nodeId + "-" + projectId + "-" + modelId + "-" + experimentId + "-" + experimentResultNumber;
                         final var lastId = resultLastId.getOrDefault(key, BigInteger.ZERO);
 
                         if (lastId.compareTo(result.getId()) < 0) {
@@ -228,5 +233,16 @@ public class ExperimentResultService implements IExperimentResultService {
         }
 
         threadUtil.killProcessById(experimentResult.get().getRunCommandPid());
+    }
+
+    @Override
+    public CreateClusterSimulationRequest generateResultNumber(CreateClusterSimulationRequest request) {
+        AtomicInteger startValue = new AtomicInteger(1);
+
+        request.getSimulationRequests().forEach(simulationRequest -> {
+            simulationRequest.setNumber(startValue.getAndIncrement());
+        });
+
+        return request;
     }
 }

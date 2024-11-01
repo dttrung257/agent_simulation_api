@@ -16,7 +16,7 @@ public interface IExperimentResultService {
 
     ExperimentResultDetailResponse getDetails(BigInteger id);
 
-    ExperimentResult recreate(Experiment experiment, long finalStep, String outputDir);
+    ExperimentResult recreate(Experiment experiment, long finalStep, String outputDir, Integer experimentResultNumber);
 
     void updateStatus(ExperimentResult experimentResult, int status);
 
@@ -27,4 +27,6 @@ public interface IExperimentResultService {
     DownloadExperimentResultResponse download(BigInteger id);
 
     void stop(BigInteger id);
+
+    CreateClusterSimulationRequest generateResultNumber(CreateClusterSimulationRequest request);
 }

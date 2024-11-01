@@ -124,7 +124,7 @@ public class SimulationService implements ISimulationService {
     }
 
     @Override
-    @Transactional(rollbackFor = { Exception.class, Throwable.class })
+//    @Transactional(rollbackFor = { Exception.class, Throwable.class })
     public void run(CreateSimulationRequest request) {
         // Run simulation
         runSimulation(request);
@@ -139,12 +139,13 @@ public class SimulationService implements ISimulationService {
         final var nodeId = nodeService.getCurrentNodeId() != null ? nodeService.getCurrentNodeId().toString() : "";
 
         final var userId = authService.getCurrentUserId();
-        request = calculateExperimentResultId(request);
         final var projectId = request.getProjectId();
         final var project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ProjectNotFoundException(ProjectErrors.E_PJ_0001.defaultMessage()));
 
         final var projectLocation = projectPath + project.getLocation();
+
+        final var experimentResultNumber = request.getNumber();
 
         request.getExperiments().forEach(experimentReq -> {
             // Get model
@@ -166,13 +167,12 @@ public class SimulationService implements ISimulationService {
             final var experimentId = experimentReq.getId();
             final var gamlFile = experimentReq.getGamlFile();
             final var finalStep = experimentReq.getFinalStep() != null ? experimentReq.getFinalStep() : SimulationConst.DEFAULT_FINAL_STEP;
-            final var experimentResultId = experimentReq.getExperimentResultId();
             final var gamlFileName = gamlFile.replace(".gaml", "");
             final var experimentName = experimentReq.getExperiment().getName();
             final var pathToExperimentPlanXmlFile = getPathToExperimentPlanXmlFile(nodeId, userId, projectId, modelId,
-                experimentId, experimentResultId, gamlFileName, experimentName);
+                    experimentId, experimentResultNumber, gamlFileName, experimentName);
             final var pathToLocalExperimentOutputDir = getPathToLocalExperimentOutputDir(nodeId, userId, projectId,
-                modelId, experimentId, experimentResultId, gamlFileName, experimentName);
+                    modelId, experimentId, experimentResultNumber, gamlFileName, experimentName);
 
             // Clear old xml file
             clearLocalResource(pathToExperimentPlanXmlFile);
@@ -186,7 +186,7 @@ public class SimulationService implements ISimulationService {
 
             // Recreate experiment result.
             final var experimentResult = experimentResultService.recreate(experimentReq.getExperiment(), finalStep,
-                    pathToLocalExperimentOutputDir);
+                    pathToLocalExperimentOutputDir, experimentResultNumber);
 
             // Execute legacy command.
             executeLegacy(createXmlCommand, runLegacyCommand, pathToExperimentPlanXmlFile,
@@ -195,40 +195,19 @@ public class SimulationService implements ISimulationService {
     }
 
     private String getPathToExperimentPlanXmlFile(String nodeId, BigInteger userId, BigInteger projectId,
-            BigInteger modelId, BigInteger experimentId, int experimentResultId, String gamlFileName, String experimentName) {
+            BigInteger modelId, BigInteger experimentId, int experimentResultNumber, String gamlFileName, String experimentName) {
 
         return String.format("storage/xmls/node-%s_user-%s_project-%s_model-%s_experiment-%s_result-%s_%s-%s.xml",
-                nodeId, userId, projectId, modelId, experimentId, experimentResultId, gamlFileName, experimentName);
+                nodeId, userId, projectId, modelId, experimentId, experimentResultNumber, gamlFileName, experimentName);
     }
 
     private String getPathToLocalExperimentOutputDir(String nodeId, BigInteger userId, BigInteger projectId,
-            BigInteger modelId, BigInteger experimentId, int experimentResultId, String gamlFileName, String experimentName) {
+            BigInteger modelId, BigInteger experimentId, int experimentResultNumber, String gamlFileName, String experimentName) {
 
         return String.format("storage/outputs/node-%s_user-%s_project-%s_model-%s_experiment-%s_result-%s_%s-%s",
-                nodeId, userId, projectId, modelId, experimentId, experimentResultId, gamlFileName, experimentName);
+                nodeId, userId, projectId, modelId, experimentId, experimentResultNumber, gamlFileName, experimentName);
     }
 
-    /**
-     * This method is used to calculate experiment result id.
-     *
-     * @param request CreateSimulationRequest
-     * @return CreateSimulationRequest
-     */
-    private CreateSimulationRequest calculateExperimentResultId(CreateSimulationRequest request) {
-        final var userId = authService.getCurrentUserId();
-        final Map<String, AtomicInteger> idCounters = new HashMap<>();
-
-        request.getExperiments().forEach(experiment -> {
-            final var modelId = experiment.getModelId();
-            final var experimentId = experiment.getId();
-            final String key = userId + "_" + modelId + "_" + experimentId;
-
-            final AtomicInteger counter = idCounters.computeIfAbsent(key, value -> new AtomicInteger(1));
-            experiment.setExperimentResultId(counter.getAndIncrement());
-        });
-
-        return request;
-    }
 
     /**
      * This method is used to run job execute legacy command.
