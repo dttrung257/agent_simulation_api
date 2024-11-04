@@ -1,0 +1,19 @@
+spring:
+  profiles:
+    active: local
+  application:
+    name: agent-simulation-api
+  threads:
+    virtual:
+      enabled: true
+
+app:
+  timezone: UTC+7
+
+gama:
+  path:
+    shell: /opt/gama-platform/headless/gama-headless.sh
+
+cluster:
+  config:
+    path: src/main/resources/cluster-config.yml
