@@ -21,6 +21,7 @@ import com.uet.agent_simulation_api.services.image.IImageService;
 import com.uet.agent_simulation_api.services.node.INodeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.util.Pair;
@@ -47,6 +48,9 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
     private final IImageService imageService;
     private final ExperimentResultRepository experimentResultRepository;
     private final ExperimentResultImageRepository experimentResultImageRepository;
+
+    @Value("${gama.config.frame-rate}")
+    private int GAMA_FRAME_RATE;
 
     @Override
     public Pagination<List<ExperimentResultImage>> get(BigInteger experimentResultId, BigInteger experimentId,
@@ -270,7 +274,12 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
         return new ExperimentResultImageListResponse(stepsData);
     }
 
-    private ExperimentResultImageListResponse getExperimentResultImageFromNode(BigInteger experimentResultId, Integer startStep, Integer endStep, Integer nodeId) {
+    private ExperimentResultImageListResponse getExperimentResultImageFromNode(
+        BigInteger experimentResultId,
+        Integer startStep,
+        Integer endStep,
+        Integer nodeId
+    ) {
         final var webClient = nodeService.getWebClientByNodeId(nodeId);
 
         try {
@@ -295,8 +304,12 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
     }
 
     @Override
-    public Flux<ExperimentResultImageListResponse> getAnimatedImages(BigInteger experimentResultId, Integer startStep,
-         Integer endStep, long duration) {
+    public Flux<ExperimentResultImageListResponse> getAnimatedImages(
+        BigInteger experimentResultId,
+        Integer startStep,
+        Integer endStep,
+        long duration
+    ) {
         final int CHUNK_SIZE = 10;
 
         final var experimentResult = experimentResultRepository.findById(experimentResultId)
@@ -306,143 +319,167 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
             return getAnimatedImagesFromNode(experimentResultId, startStep, endStep, duration, experimentResult.getNodeId());
         }
 
+        List<Integer> steps = new ArrayList<>();
+        for (int step = startStep; step <= endStep; step += GAMA_FRAME_RATE) {
+            steps.add(step);
+        }
+
         List<Pair<Integer, Integer>> chunks = new ArrayList<>();
-        for (int i = startStep; i <= endStep; i += CHUNK_SIZE) {
-            int chunkEnd = Math.min(i + CHUNK_SIZE - 1, endStep);
-            chunks.add(Pair.of(i, chunkEnd));
+        for (int i = 0; i < steps.size(); i += CHUNK_SIZE) {
+            int endIndex = Math.min(i + CHUNK_SIZE - 1, steps.size() - 1);
+            chunks.add(Pair.of(steps.get(i), steps.get(endIndex)));
         }
 
         return Flux.fromIterable(chunks)
-                .concatMap(chunk -> {
-                    final var images = experimentResultImageRepository.findByRange(experimentResultId, chunk.getFirst(), chunk.getSecond(),
-                            authService.getCurrentUserId());
+            .concatMap(chunk -> {
+                final var images = experimentResultImageRepository.findByRange(experimentResultId, chunk.getFirst(), chunk.getSecond(),
+                        authService.getCurrentUserId());
 
-                    final var groupedImages = images.stream()
-                            .collect(Collectors.groupingBy(ExperimentResultImage::getStep));
+                final var groupedImages = images.stream()
+                        .collect(Collectors.groupingBy(ExperimentResultImage::getStep));
 
-                    return Flux.interval(Duration.ofMillis(duration))
-                            .take(chunk.getSecond() - chunk.getFirst() + 1)
-                            .flatMap(i -> {
-                                var step = i.intValue() + chunk.getFirst();
-                                var stepImages = groupedImages.get(step);
-                                if (stepImages == null) {
-                                    return Flux.empty();
-                                }
+                return Flux.interval(Duration.ofMillis(duration))
+                    .take((chunk.getSecond() - chunk.getFirst()) / GAMA_FRAME_RATE + 1)
+                    .flatMap(i -> {
+                        var step = chunk.getFirst() + i.intValue() * GAMA_FRAME_RATE;
+                        var stepImages = groupedImages.get(step);
+                        if (stepImages == null) {
+                            return Flux.empty();
+                        }
 
-                                var categories = stepImages.stream()
-                                        .map(image -> {
-                                            var base64EncodedImage = imageService.getImageDataEncoded(image.getLocation());
-                                            return new ExperimentResultImageCategoryResponse(experimentResultId,
-                                                    image.getExperimentResultCategoryId(), base64EncodedImage);
-                                        })
-                                        .collect(Collectors.toList());
+                        var categories = stepImages.stream()
+                            .map(image -> {
+                                var base64EncodedImage = imageService.getImageDataEncoded(image.getLocation());
+                                return new ExperimentResultImageCategoryResponse(experimentResultId,
+                                        image.getExperimentResultCategoryId(), base64EncodedImage);
+                            })
+                            .collect(Collectors.toList());
 
-                                return Flux.just(new ExperimentResultImageListResponse(
-                                        List.of(new ExperimentResultImageStepResponse(step, categories))));
-                            });
-                });
+                        return Flux.just(new ExperimentResultImageListResponse(
+                                List.of(new ExperimentResultImageStepResponse(step, categories))));
+                    });
+            });
     }
 
     @Override
-    public Flux<ExperimentResultImageListResponse> getMultiExperimentAnimatedImages(String experimentResultIds, Integer startStep,
-         Integer endStep, long duration) {
+    public Flux<ExperimentResultImageListResponse> getMultiExperimentAnimatedImages(
+        String experimentResultIds,
+        Integer startStep,
+        Integer endStep,
+        long duration
+    ) {
         final int CHUNK_SIZE = 10;
 
         List<BigInteger> experimentResultIdList = Arrays.stream(experimentResultIds.split(","))
                 .map(BigInteger::new)
                 .collect(Collectors.toList());
 
+        List<Integer> steps = new ArrayList<>();
+        for (int step = startStep; step <= endStep; step += GAMA_FRAME_RATE) {
+            steps.add(step);
+        }
+
         List<Pair<Integer, Integer>> chunks = new ArrayList<>();
-        for (int i = startStep; i <= endStep; i += CHUNK_SIZE) {
-            int chunkEnd = Math.min(i + CHUNK_SIZE - 1, endStep);
-            chunks.add(Pair.of(i, chunkEnd));
+        for (int i = 0; i < steps.size(); i += CHUNK_SIZE) {
+            int endIndex = Math.min(i + CHUNK_SIZE - 1, steps.size() - 1);
+            chunks.add(Pair.of(steps.get(i), steps.get(endIndex)));
         }
 
         return Flux.fromIterable(chunks)
             .concatMap(chunk ->
                 Flux.interval(Duration.ofNanos(duration))
-                    .take(chunk.getSecond() - chunk.getFirst() + 1)
+                    .take((chunk.getSecond() - chunk.getFirst()) / GAMA_FRAME_RATE + 1)
                     .flatMap(i -> {
-                        int step = i.intValue() + chunk.getFirst();
+                        int step = chunk.getFirst() + i.intValue() * GAMA_FRAME_RATE;
 
                         return Flux.fromIterable(experimentResultIdList)
                             .flatMap(experimentResultId -> {
-                                    final var experimentResult = experimentResultRepository.findById(experimentResultId)
-                                            .orElseThrow(() -> new ExperimentResultNotFoundException(ExperimentResultErrors.E_ER_0001.defaultMessage()));
+                                final var experimentResult = experimentResultRepository.findById(experimentResultId)
+                                    .orElseThrow(() -> new ExperimentResultNotFoundException(ExperimentResultErrors.E_ER_0001.defaultMessage()));
 
-                                    if (!nodeService.getCurrentNodeId().equals(experimentResult.getNodeId())) {
-                                        return getMultiExperimentAnimatedImagesFromNode(experimentResultId, step, step, duration, experimentResult.getNodeId());
-                                    }
+                                if (!nodeService.getCurrentNodeId().equals(experimentResult.getNodeId())) {
+                                    return getMultiExperimentAnimatedImagesFromNode(experimentResultId, step, step, duration, experimentResult.getNodeId());
+                                }
 
-                                    final var images = experimentResultImageRepository.findByRange(experimentResultId, step, step,
-                                            authService.getCurrentUserId());
+                                final var images = experimentResultImageRepository.findByRange(experimentResultId, step, step,
+                                    authService.getCurrentUserId());
 
-                                    if (images.isEmpty()) {
-                                        return Flux.empty();
-                                    }
+                                if (images.isEmpty()) {
+                                    return Flux.empty();
+                                }
 
-                                    final var categories = images.stream()
-                                        .map(image -> {
-                                            var base64EncodedImage = imageService.getImageDataEncoded(image.getLocation());
-                                            return new ExperimentResultImageCategoryResponse(experimentResultId,
-                                                    image.getExperimentResultCategoryId(), base64EncodedImage);
-                                        })
-                                        .collect(Collectors.toList());
+                                final var categories = images.stream()
+                                    .map(image -> {
+                                        var base64EncodedImage = imageService.getImageDataEncoded(image.getLocation());
+                                        return new ExperimentResultImageCategoryResponse(experimentResultId,
+                                                image.getExperimentResultCategoryId(), base64EncodedImage);
+                                    })
+                                    .collect(Collectors.toList());
 
-                                    return Flux.just(new ExperimentResultImageListResponse(
+                                return Flux.just(new ExperimentResultImageListResponse(
                                         List.of(new ExperimentResultImageStepResponse(step, categories))));
                             })
                             .collectList()
                             .flatMapMany(responses -> {
-                                    // Merge all categories from different experimentResults into one response
-                                    List<ExperimentResultImageStepResponse> mergedStepResponses = new ArrayList<>();
-                                    List<ExperimentResultImageCategoryResponse> allCategories = new ArrayList<>();
+                                // Merge all categories from different experimentResults into one response
+                                List<ExperimentResultImageStepResponse> mergedStepResponses = new ArrayList<>();
+                                List<ExperimentResultImageCategoryResponse> allCategories = new ArrayList<>();
 
-                                    for(ExperimentResultImageListResponse response : responses) {
-                                        if(!response.steps().isEmpty()) {
-                                            allCategories.addAll(response.steps().getFirst().categories());
-                                        }
+                                for(ExperimentResultImageListResponse response : responses) {
+                                    if(!response.steps().isEmpty()) {
+                                        allCategories.addAll(response.steps().getFirst().categories());
                                     }
+                                }
 
-                                    if(!allCategories.isEmpty()) {
-                                        mergedStepResponses.add(new ExperimentResultImageStepResponse(step, allCategories));
-                                        return Flux.just(new ExperimentResultImageListResponse(mergedStepResponses));
-                                    }
+                                if(!allCategories.isEmpty()) {
+                                    mergedStepResponses.add(new ExperimentResultImageStepResponse(step, allCategories));
+                                    return Flux.just(new ExperimentResultImageListResponse(mergedStepResponses));
+                                }
 
-                                    return Flux.empty();
+                                return Flux.empty();
                             });
                     })
             );
     }
 
-    private Flux<ExperimentResultImageListResponse> getAnimatedImagesFromNode(BigInteger experimentResultId, Integer startStep,
-            Integer endStep, long duration, Integer nodeId) {
+    private Flux<ExperimentResultImageListResponse> getAnimatedImagesFromNode(
+        BigInteger experimentResultId,
+        Integer startStep,
+        Integer endStep,
+        long duration,
+        Integer nodeId
+    ) {
         final var webClient = nodeService.getWebClientByNodeId(nodeId);
 
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/api/v1/experiment_result_images/animation")
-                        .queryParam("experiment_result_id", experimentResultId)
-                        .queryParam("start_step", startStep)
-                        .queryParam("end_step", endStep)
-                        .queryParam("animation", true)
-                        .queryParam("duration", duration)
-                        .build())
+                    .queryParam("experiment_result_id", experimentResultId)
+                    .queryParam("start_step", startStep)
+                    .queryParam("end_step", endStep)
+                    .queryParam("animation", true)
+                    .queryParam("duration", duration)
+                    .build())
                 .retrieve()
                 .bodyToFlux(ExperimentResultImageListResponse.class);
     }
 
-    private Flux<ExperimentResultImageListResponse> getMultiExperimentAnimatedImagesFromNode(BigInteger experimentResultId, Integer startStep,
-            Integer endStep, long duration, Integer nodeId) {
+    private Flux<ExperimentResultImageListResponse> getMultiExperimentAnimatedImagesFromNode(
+        BigInteger experimentResultId,
+        Integer startStep,
+        Integer endStep,
+        long duration,
+        Integer nodeId
+    ) {
         final var webClient = nodeService.getWebClientByNodeId(nodeId);
 
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/api/v1/experiment_result_images/multi_experiment_animation")
-                        .queryParam("experiment_result_id", experimentResultId)
-                        .queryParam("start_step", startStep)
-                        .queryParam("end_step", endStep)
-                        .queryParam("animation", true)
-                        .queryParam("duration", duration)
-                        .build())
+                    .queryParam("experiment_result_id", experimentResultId)
+                    .queryParam("start_step", startStep)
+                    .queryParam("end_step", endStep)
+                    .queryParam("animation", true)
+                    .queryParam("duration", duration)
+                    .build())
                 .retrieve()
                 .bodyToFlux(ExperimentResultImageListResponse.class);
     }

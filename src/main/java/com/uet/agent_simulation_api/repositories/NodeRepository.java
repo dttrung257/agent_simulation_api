@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface NodeRepository extends JpaRepository<Node, Integer> {
-    @Query(value = "SELECT MAX(id) FROM Node")
+    @Query("SELECT MAX(id) FROM Node")
     Integer findMaxId();
 
     @Query("SELECT n FROM Node n")

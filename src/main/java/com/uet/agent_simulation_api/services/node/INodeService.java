@@ -7,6 +7,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.List;
 
 public interface INodeService {
+    /**
+     * This method is used to get all nodes.
+     *
+     * @return List<NodeBriefResponse>
+     */
     List<NodeBriefResponse> get();
 
     Node getCurrentNode();
@@ -18,7 +23,19 @@ public interface INodeService {
      */
     Integer getCurrentNodeId();
 
+    /**
+     * This method is used to get a node by id.
+     *
+     * @param nodeId Node id
+     * @return Node
+     */
     Node getNodeById(Integer nodeId);
 
+    /**
+     * This method is used to get a web client by node id.
+     *
+     * @param nodeId Node id
+     * @return WebClient
+     */
     WebClient getWebClientByNodeId(Integer nodeId);
 }

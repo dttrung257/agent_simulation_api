@@ -1,10 +1,8 @@
 package com.uet.agent_simulation_api.services.experiment_result;
 
-import com.uet.agent_simulation_api.constant.ExperimentResultStatusConst;
 import com.uet.agent_simulation_api.exceptions.errors.ExperimentResultErrors;
 import com.uet.agent_simulation_api.exceptions.experiment_result.ExperimentResultNotFoundException;
 import com.uet.agent_simulation_api.exceptions.node.CannotFetchNodeDataException;
-import com.uet.agent_simulation_api.models.Experiment;
 import com.uet.agent_simulation_api.models.ExperimentResult;
 import com.uet.agent_simulation_api.repositories.ExperimentResultRepository;
 import com.uet.agent_simulation_api.requests.simulation.CreateClusterSimulationRequest;
@@ -19,15 +17,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.FileInputStream;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -49,29 +44,24 @@ public class ExperimentResultService implements IExperimentResultService {
 
     @Override
     public ExperimentResultDetailResponse getDetails(BigInteger id) {
-        final var experimentResult = experimentResultRepository.findByIdAndUserId(id, authService.getCurrentUserId())
+        final var experimentResult = experimentResultRepository.findExperimentResultDetail(id, authService.getCurrentUserId())
             .orElseThrow(() -> new ExperimentResultNotFoundException(ExperimentResultErrors.E_ER_0001.defaultMessage()));
         final var node = nodeService.getNodeById(experimentResult.getNodeId());
         final var downloadUrl = String.format("http://%s:%d/api/v1/experiment_results/%d/download",
                 node.getHost(), node.getPort(), experimentResult.getId());
 
-        return new ExperimentResultDetailResponse(experimentResult.getId(), experimentResult.getFinalStep(),
-            experimentResult.getStatus(), experimentResult.getExperimentId(), experimentResult.getNodeId(), downloadUrl);
-    }
-
-    @Override
-    public ExperimentResult recreate(Experiment experiment, long finalStep, String outputDir, Integer experimentResultNumber) {
-        experimentResultRepository.deleteByExperimentIdAndExperimentResultNumber(experiment.getId(), experimentResultNumber, nodeService.getCurrentNodeId());
-
-        // Save new experiment result.
-        return experimentResultRepository.save(ExperimentResult.builder()
-                .experiment(experiment)
-                .location(outputDir)
-                .finalStep((int) finalStep)
-                .node(nodeService.getCurrentNode())
-                .status(ExperimentResultStatusConst.PENDING)
-                .number(experimentResultNumber)
-                .build());
+        return new ExperimentResultDetailResponse(
+            experimentResult.getId(),
+            experimentResult.getFinalStep(),
+            experimentResult.getStatus(),
+            experimentResult.getExperimentId(),
+            experimentResult.getModelId(),
+            experimentResult.getProjectId(),
+            experimentResult.getNodeId(),
+            experimentResult.getExperimentName(),
+            experimentResult.getModelName(),
+            experimentResult.getProjectName(),downloadUrl
+        );
     }
 
     @Override
@@ -159,39 +149,6 @@ public class ExperimentResultService implements IExperimentResultService {
     }
 
     @Override
-    public HashMap<String, BigInteger> getCurrentExperimentResultIds(CreateClusterSimulationRequest request) {
-        final var resultLastId = new HashMap<String, BigInteger>();
-        request.getSimulationRequests().forEach((simulationRequest) -> {
-            final var nodeId = simulationRequest.getNodeId();
-            final var projectId = simulationRequest.getProjectId();
-            final var experimentResultNumber = simulationRequest.getNumber();
-
-            simulationRequest.getExperiments().forEach((experiment) -> {
-                final var experimentId = experiment.getId();
-                final var modelId = experiment.getModelId();
-                final var userId = authService.getCurrentUserId();
-                final var experimentResultList = experimentResultRepository.find(userId, experimentId, modelId, projectId, nodeId, experimentResultNumber);
-
-                if (experimentResultList.isEmpty()) {
-                    final var key = nodeId + "-" + projectId + "-" + modelId + "-" + experimentId + "-" + experimentResultNumber;
-                    resultLastId.put(key, BigInteger.ZERO);
-                } else {
-                    experimentResultList.forEach((result) -> {
-                        final var key = nodeId + "-" + projectId + "-" + modelId + "-" + experimentId + "-" + experimentResultNumber;
-                        final var lastId = resultLastId.getOrDefault(key, BigInteger.ZERO);
-
-                        if (lastId.compareTo(result.getId()) < 0) {
-                            resultLastId.put(key, result.getId());
-                        }
-                    });
-                }
-            });
-        });
-
-        return resultLastId;
-    }
-
-    @Override
     public DownloadExperimentResultResponse download(BigInteger id) {
         final var experimentResult = experimentResultRepository.findById(id);
         if (experimentResult.isEmpty()) {
@@ -236,7 +193,7 @@ public class ExperimentResultService implements IExperimentResultService {
     }
 
     @Override
-    public CreateClusterSimulationRequest generateResultNumber(CreateClusterSimulationRequest request) {
+    public CreateClusterSimulationRequest generateRequestNumber(CreateClusterSimulationRequest request) {
         AtomicInteger startValue = new AtomicInteger(1);
 
         request.getSimulationRequests().forEach(simulationRequest -> {
@@ -244,5 +201,10 @@ public class ExperimentResultService implements IExperimentResultService {
         });
 
         return request;
+    }
+
+    @Override
+    public BigInteger getLastExperimentResultNumber(BigInteger experimentId) {
+        return experimentResultRepository.getLastExperimentResultNumber(experimentId, authService.getCurrentUserId());
     }
 }

@@ -6,5 +6,10 @@ import java.math.BigInteger;
 import java.util.List;
 
 public interface IModelService {
+    /**
+     * This method is used to get all models.
+     *
+     * @return List<Model>
+     */
     List<Model> get(BigInteger projectId, Boolean hasExperiment);
 }

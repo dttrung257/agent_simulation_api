@@ -2,6 +2,7 @@ package com.uet.agent_simulation_api.controllers;
 
 import com.uet.agent_simulation_api.responses.ResponseHandler;
 import com.uet.agent_simulation_api.responses.SuccessResponse;
+import com.uet.agent_simulation_api.services.experiment_result.IExperimentResultService;
 import com.uet.agent_simulation_api.services.node.INodeService;
 import com.uet.agent_simulation_api.utils.FileUtil;
 import com.uet.agent_simulation_api.utils.ThreadUtil;
@@ -10,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigInteger;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -20,6 +23,8 @@ public class Controller {
     private final ThreadUtil threadUtil;
     private final INodeService nodeService;
     private final ResponseHandler ResponseHandler;
+    private final IExperimentResultService experimentResultService;
+    private final ResponseHandler responseHandler;
 
     @Value("${server.port}")
     private int port;
