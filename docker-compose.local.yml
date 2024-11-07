@@ -7,7 +7,7 @@ services:
     volumes:
       - ./:/app
       - ./projects:/app/projects
-#      - /opt/gama-platform:/opt/gama-platform
+      - ./gama/gama-platform:/opt/gama-platform
     ports:
       - "9999:9999"
     networks:
@@ -50,8 +50,8 @@ services:
     volumes:
       - agent_simulation_redis_data:/data/
       - ./docker/local/redis/redis.conf:/usr/local/etc/redis/redis.conf
-    #    ports:
-    #      - "6380:6379"
+    ports:
+      - "16379:6379"
     networks:
       - agent_simulation_net
 
