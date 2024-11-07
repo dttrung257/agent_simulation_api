@@ -27,6 +27,7 @@ import com.uet.agent_simulation_api.responses.SuccessResponse;
 import com.uet.agent_simulation_api.responses.simulation.RunSimulationResponse;
 import com.uet.agent_simulation_api.services.auth.IAuthService;
 import com.uet.agent_simulation_api.services.experiment_result.IExperimentResultService;
+import com.uet.agent_simulation_api.services.multi_simulation.IMultiSimulationService;
 import com.uet.agent_simulation_api.services.node.INodeService;
 import com.uet.agent_simulation_api.services.simulation.ISimulationService;
 import jakarta.validation.Valid;
@@ -43,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @RestController
 @Slf4j
@@ -60,6 +62,7 @@ public class SimulationController {
     private final ExperimentRepository experimentRepository;
     private final IExperimentResultService experimentResultService;
     private final ExperimentResultRepository experimentResultRepository;
+    private final IMultiSimulationService multiSimulationService;
 
     @PostMapping
     public ResponseEntity<SuccessResponse> runSimulation(@Valid @RequestBody CreateSimulationRequest request) {
@@ -117,6 +120,7 @@ public class SimulationController {
         final ArrayList<NewExperimentResult> newExperimentResultList = new ArrayList<>();
         // Keep track of the last number used for each experiment ID
         final Map<BigInteger, BigInteger> experimentLastNumbers = new HashMap<>();
+        AtomicBoolean clearOldMultiSimulationData = new AtomicBoolean(false);
 
         request.getSimulationRequests().forEach(simulationRequest -> {
             final var node = nodeRepository.findById(simulationRequest.getNodeId())
@@ -124,8 +128,11 @@ public class SimulationController {
 
             final var userId = authService.getCurrentUserId();
             final var projectId = simulationRequest.getProjectId();
-            projectRepository.findById(projectId)
+            final var project = projectRepository.findById(projectId)
                     .orElseThrow(() -> new ProjectNotFoundException(ProjectErrors.E_PJ_0001.defaultMessage()));
+            if (project.getName().contains("multi simulation")) {
+                clearOldMultiSimulationData.set(true);
+            }
 
             final var requestNumber = simulationRequest.getNumber();
 
@@ -168,6 +175,10 @@ public class SimulationController {
                         pathToLocalExperimentOutputDir, experimentResultNumber, node, requestNumber));
             });
         });
+
+        if (clearOldMultiSimulationData.get()) {
+            multiSimulationService.clear();
+        }
 
         return newExperimentResultList;
     }

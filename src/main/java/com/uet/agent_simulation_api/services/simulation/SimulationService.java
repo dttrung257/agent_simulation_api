@@ -19,7 +19,6 @@ import com.uet.agent_simulation_api.services.auth.IAuthService;
 import com.uet.agent_simulation_api.services.experiment_result.IExperimentResultService;
 import com.uet.agent_simulation_api.services.image.IImageService;
 import com.uet.agent_simulation_api.services.node.INodeService;
-import com.uet.agent_simulation_api.services.s3.IS3Service;
 import com.uet.agent_simulation_api.utils.ConvertUtil;
 import com.uet.agent_simulation_api.utils.FileUtil;
 import com.uet.agent_simulation_api.utils.TimeUtil;
@@ -51,7 +50,8 @@ import java.util.concurrent.ExecutorService;
 @Slf4j
 public class SimulationService implements ISimulationService {
     private final TimeUtil timeUtil;
-    private final IS3Service s3Service;
+    private final FileUtil fileUtil;
+//    private final IS3Service s3Service;
     private final ConvertUtil convertUtil;
     private final IAuthService authService;
     private final INodeService nodeService;
@@ -63,7 +63,6 @@ public class SimulationService implements ISimulationService {
     private final IExperimentResultService experimentResultService;
     private final ExperimentResultImageRepository experimentResultImageRepository;
     private final ExperimentResultCategoryRepository experimentResultCategoryRepository;
-    private final FileUtil fileUtil;
 
     @Value("${gama.path.project}")
     private String GAMA_PROJECT_ROOT_PATH;
@@ -420,68 +419,68 @@ public class SimulationService implements ISimulationService {
         return true;
     }
 
-    /**
-     * This method is used to clear old S3 result.
-     *
-     * @param projectId BigInteger
-     * @param modelId BigInteger
-     * @param experimentId BigInteger
-     * @param experimentResultId int
-     */
-    private void clearOldS3Result(
-        BigInteger projectId,
-        BigInteger modelId,
-        BigInteger experimentId,
-        int experimentResultId
-    ) {
-        final var outputObjectKey = getOutputObjectKey(projectId, modelId, experimentId, experimentResultId);
+//    /**
+//     * This method is used to clear old S3 result.
+//     *
+//     * @param projectId BigInteger
+//     * @param modelId BigInteger
+//     * @param experimentId BigInteger
+//     * @param experimentResultId int
+//     */
+//    private void clearOldS3Result(
+//        BigInteger projectId,
+//        BigInteger modelId,
+//        BigInteger experimentId,
+//        int experimentResultId
+//    ) {
+//        final var outputObjectKey = getOutputObjectKey(projectId, modelId, experimentId, experimentResultId);
+//
+//        s3Service.clear(outputObjectKey);
+//    }
 
-        s3Service.clear(outputObjectKey);
-    }
+//    /**
+//     * This method is used to upload result to S3.
+//     *
+//     * @param projectId BigInteger
+//     * @param modelId BigInteger
+//     * @param experimentId BigInteger
+//     * @param experimentResultId int
+//     * @param localOutputDir String
+//     */
+//    private void uploadResult(
+//        BigInteger projectId,
+//        BigInteger modelId,
+//        BigInteger experimentId,
+//        int experimentResultId,
+//        String localOutputDir
+//    ) {
+//        log.info("Start get S3 object key");
+//        final var outputObjectKey = getOutputObjectKey(projectId, modelId, experimentId, experimentResultId);
+//        log.info("End get S3 object key: {}", outputObjectKey);
+//
+//        log.info("Start upload directory to S3");
+//        s3Service.uploadDirectory(localOutputDir, outputObjectKey);
+//        log.info("End upload directory to S3");
+//    }
 
-    /**
-     * This method is used to upload result to S3.
-     *
-     * @param projectId BigInteger
-     * @param modelId BigInteger
-     * @param experimentId BigInteger
-     * @param experimentResultId int
-     * @param localOutputDir String
-     */
-    private void uploadResult(
-        BigInteger projectId,
-        BigInteger modelId,
-        BigInteger experimentId,
-        int experimentResultId,
-        String localOutputDir
-    ) {
-        log.info("Start get S3 object key");
-        final var outputObjectKey = getOutputObjectKey(projectId, modelId, experimentId, experimentResultId);
-        log.info("End get S3 object key: {}", outputObjectKey);
-
-        log.info("Start upload directory to S3");
-        s3Service.uploadDirectory(localOutputDir, outputObjectKey);
-        log.info("End upload directory to S3");
-    }
-
-    /**
-     * This method is used to get output object key.
-     *
-     * @param projectId BigInteger
-     * @param modelId BigInteger
-     * @param experimentId BigInteger
-     * @param experimentResultId int
-     * @return String
-     */
-    private String getOutputObjectKey(
-        BigInteger projectId,
-        BigInteger modelId,
-        BigInteger experimentId,
-        int experimentResultId
-    ) {
-        final var userId = authService.getCurrentUserId();
-
-        return String.format("simulation_results/user_%s/project_%s/model_%s/experiment_%s/result_%s/",
-            projectId, userId, modelId, experimentId, experimentResultId);
-    }
+//    /**
+//     * This method is used to get output object key.
+//     *
+//     * @param projectId BigInteger
+//     * @param modelId BigInteger
+//     * @param experimentId BigInteger
+//     * @param experimentResultId int
+//     * @return String
+//     */
+//    private String getOutputObjectKey(
+//        BigInteger projectId,
+//        BigInteger modelId,
+//        BigInteger experimentId,
+//        int experimentResultId
+//    ) {
+//        final var userId = authService.getCurrentUserId();
+//
+//        return String.format("simulation_results/user_%s/project_%s/model_%s/experiment_%s/result_%s/",
+//            projectId, userId, modelId, experimentId, experimentResultId);
+//    }
 }
