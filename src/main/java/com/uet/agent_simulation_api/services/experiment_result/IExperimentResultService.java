@@ -80,4 +80,11 @@ public interface IExperimentResultService {
      * @return The last result number associated with the experiment
      */
     BigInteger getLastExperimentResultNumber(BigInteger experimentId);
+
+    /**
+     * Deletes the experiment result with the specified ID.
+     *
+     * @param id The unique identifier of the experiment result to delete
+     */
+    void delete(BigInteger id);
 }

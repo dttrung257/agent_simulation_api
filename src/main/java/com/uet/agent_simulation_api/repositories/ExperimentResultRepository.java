@@ -121,4 +121,22 @@ public interface ExperimentResultRepository extends JpaRepository<ExperimentResu
         @Param("experiment_id") BigInteger experimentId,
         @Param("user_id") BigInteger userId
     );
+
+    @Query(
+        value = """
+            SELECT er FROM ExperimentResult er
+            WHERE er.simulationRunId = :simulation_run_id
+        """
+    )
+    List<ExperimentResult> findBySimulationRunId(@Param("simulation_run_id") BigInteger simulationRunId);
+
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM ExperimentResult er WHERE er.simulationRunId = :simulation_run_id")
+    void deleteBySimulationRunId(@Param("simulation_run_id") BigInteger simulationRunId);
+
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM ExperimentResult er WHERE er.id IN :ids")
+    void deleteByIds(@Param("ids") List<BigInteger> ids);
 }

@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS experiment_results (
     status TINYINT NOT NULL,
     run_command_pid BIGINT,
     number BIGINT,
+    simulation_run_id BIGINT,
     PRIMARY KEY (`id`),
     CONSTRAINT fk_experiment_results_experiment_id FOREIGN KEY (experiment_id) REFERENCES experiments(id)
     ON UPDATE RESTRICT ON DELETE CASCADE,
@@ -142,3 +143,13 @@ CREATE TABLE IF NOT EXISTS experiment_result_images (
 );
 CREATE INDEX idx_experiment_result_images_exp_res_id_exp_res_category_id ON
 experiment_result_images(experiment_result_id, experiment_result_category_id);
+
+-- simulation_runs table
+CREATE TABLE IF NOT EXISTS simulation_runs (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
+    PRIMARY KEY (`id`)
+);

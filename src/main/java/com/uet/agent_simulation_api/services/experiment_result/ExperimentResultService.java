@@ -207,4 +207,16 @@ public class ExperimentResultService implements IExperimentResultService {
     public BigInteger getLastExperimentResultNumber(BigInteger experimentId) {
         return experimentResultRepository.getLastExperimentResultNumber(experimentId, authService.getCurrentUserId());
     }
+
+    @Override
+    public void delete(BigInteger id) {
+        final var experimentResult = experimentResultRepository.findById(id);
+        if (experimentResult.isEmpty()) {
+            return;
+        }
+
+        fileUtil.delete(experimentResult.get().getLocation());
+        fileUtil.delete(experimentResult.get().getLocation() + ".zip");
+        experimentResultRepository.delete(experimentResult.get());
+    }
 }

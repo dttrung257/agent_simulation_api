@@ -29,15 +29,13 @@ import com.uet.agent_simulation_api.services.auth.IAuthService;
 import com.uet.agent_simulation_api.services.experiment_result.IExperimentResultService;
 import com.uet.agent_simulation_api.services.multi_simulation.IMultiSimulationService;
 import com.uet.agent_simulation_api.services.node.INodeService;
+import com.uet.agent_simulation_api.services.simulation.ISimulationRunService;
 import com.uet.agent_simulation_api.services.simulation.ISimulationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -60,9 +58,24 @@ public class SimulationController {
     private final ProjectRepository projectRepository;
     private final ISimulationService simulationService;
     private final ExperimentRepository experimentRepository;
+    private final ISimulationRunService simulationRunService;
     private final IExperimentResultService experimentResultService;
     private final ExperimentResultRepository experimentResultRepository;
     private final IMultiSimulationService multiSimulationService;
+
+    @GetMapping
+    public ResponseEntity<SuccessResponse> getSimulationHistory(
+        @RequestParam(name = "project_id") BigInteger projectId
+    ) {
+        return responseHandler.respondSuccess(simulationRunService.getSimulationHistory(projectId));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<SuccessResponse> deleteSimulation(@PathVariable BigInteger id) {
+        simulationRunService.delete(id);
+
+        return responseHandler.respondSuccess("Simulation deleted successfully");
+    }
 
     @PostMapping
     public ResponseEntity<SuccessResponse> runSimulation(@Valid @RequestBody CreateSimulationRequest request) {
@@ -130,9 +143,9 @@ public class SimulationController {
             final var projectId = simulationRequest.getProjectId();
             final var project = projectRepository.findById(projectId)
                     .orElseThrow(() -> new ProjectNotFoundException(ProjectErrors.E_PJ_0001.defaultMessage()));
-            if (project.getName().contains("multi simulation")) {
-                clearOldMultiSimulationData.set(true);
-            }
+//            if (project.getName().contains("multi simulation")) {
+//                clearOldMultiSimulationData.set(true);
+//            }
 
             final var requestNumber = simulationRequest.getNumber();
 
@@ -176,14 +189,16 @@ public class SimulationController {
             });
         });
 
-        if (clearOldMultiSimulationData.get()) {
-            multiSimulationService.clear();
-        }
+//        if (clearOldMultiSimulationData.get()) {
+//            multiSimulationService.clear();
+//        }
 
         return newExperimentResultList;
     }
 
     private List<RunSimulationResponse> createNewExperimentResult(List<NewExperimentResult> newExperimentResultList, CreateClusterSimulationRequest request) {
+        final var simulationRun = simulationRunService.create();
+
         final var resultIdList = new ArrayList<RunSimulationResponse>();
         final var experimentResultList = newExperimentResultList.stream()
             .map(newExperimentResult -> ExperimentResult.builder()
@@ -193,6 +208,7 @@ public class SimulationController {
                 .node(newExperimentResult.node())
                 .status(ExperimentResultStatusConst.PENDING)
                 .number(newExperimentResult.experimentResultNumber())
+                .simulationRunId(simulationRun.getId())
                 .build())
             .toList();
 
