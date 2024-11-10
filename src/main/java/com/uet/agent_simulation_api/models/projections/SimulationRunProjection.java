@@ -1,6 +1,7 @@
 package com.uet.agent_simulation_api.models.projections;
 
 import java.math.BigInteger;
+import java.util.Date;
 
 public interface SimulationRunProjection {
     BigInteger getId();
@@ -8,4 +9,5 @@ public interface SimulationRunProjection {
     String getExperimentName();
     String getModelName();
     Long getFinalStep();
+    Date getCreatedAt();
 }

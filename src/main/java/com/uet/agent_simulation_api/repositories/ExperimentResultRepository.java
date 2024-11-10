@@ -1,7 +1,9 @@
 package com.uet.agent_simulation_api.repositories;
 
 import com.uet.agent_simulation_api.models.ExperimentResult;
+import com.uet.agent_simulation_api.models.ExperimentResultImage;
 import com.uet.agent_simulation_api.models.projections.ExperimentResultDetailProjection;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

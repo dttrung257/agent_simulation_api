@@ -59,7 +59,7 @@ See at storage/logs/spring.log
 
 ## Insert master data
 ```
-docker exec -i agent_simulation_local_db mysql -uagsuser -pagspassword agent_simulation < ./src/main/resources/db/sql/master_data_local.sql
+docker exec -i agent_simulation_local_db mysql -uagsxuser -pagspassword agent_simulation < ./src/main/resources/db/sql/master_data_local.sql
 docker exec -i agent_simulation_local_db mysql -uagsuser -pagspassword agent_simulation < ./src/main/resources/db/sql/import-pig-farm-multi-simulation-project.sql
 docker exec -i agent_simulation_local_db mysql -uagsuser -pagspassword agent_simulation < ./src/main/resources/db/sql/import-klinh-pig-farm-emission-project.sql
 docker exec -i agent_simulation_local_db mysql -uagsuser -pagspassword agent_simulation < ./src/main/resources/db/sql/import-dhung-pig-farm-env-project.sql

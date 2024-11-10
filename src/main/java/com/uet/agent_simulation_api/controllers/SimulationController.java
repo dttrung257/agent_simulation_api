@@ -143,9 +143,6 @@ public class SimulationController {
             final var projectId = simulationRequest.getProjectId();
             final var project = projectRepository.findById(projectId)
                     .orElseThrow(() -> new ProjectNotFoundException(ProjectErrors.E_PJ_0001.defaultMessage()));
-//            if (project.getName().contains("multi simulation")) {
-//                clearOldMultiSimulationData.set(true);
-//            }
 
             final var requestNumber = simulationRequest.getNumber();
 
@@ -188,10 +185,6 @@ public class SimulationController {
                         pathToLocalExperimentOutputDir, experimentResultNumber, node, requestNumber));
             });
         });
-
-//        if (clearOldMultiSimulationData.get()) {
-//            multiSimulationService.clear();
-//        }
 
         return newExperimentResultList;
     }

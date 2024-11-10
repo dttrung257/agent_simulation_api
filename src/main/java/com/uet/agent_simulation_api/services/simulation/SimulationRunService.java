@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -41,13 +42,17 @@ public class SimulationRunService implements ISimulationRunService {
     @Override
     public List<SimulationHistoryResponse> getSimulationHistory(BigInteger projectId) {
         final var projections = simulationRunRepository.getSimulationHistory(
-                projectId,
-                authService.getCurrentUserId()
+            projectId,
+            authService.getCurrentUserId()
         );
 
         // Group by simulation run ID
         final Map<BigInteger, List<SimulationRunProjection>> groupedBySimulationId = projections.stream()
-                .collect(Collectors.groupingBy(SimulationRunProjection::getId));
+                .collect(Collectors.groupingBy(
+                        SimulationRunProjection::getId,
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                ));
 
         // Convert to response format
         return groupedBySimulationId.entrySet().stream()
@@ -58,7 +63,8 @@ public class SimulationRunService implements ISimulationRunService {
 
                 return new SimulationHistoryResponse(
                     entry.getKey(),
-                    resultIds, // add resultIds vào constructor
+                    resultIds,
+                    entry.getValue().getFirst().getCreatedAt(),
                     entry.getValue().stream()
                         .map(proj -> new SimulationDetailResponse(
                                 proj.getExperimentResultId(),
