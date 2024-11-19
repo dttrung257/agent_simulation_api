@@ -142,10 +142,10 @@ public class SimulationService implements ISimulationService {
                 .orElseThrow(() -> new ProjectNotFoundException(ProjectErrors.E_PJ_0001.defaultMessage()));
 
         final var projectLocation = GAMA_PROJECT_ROOT_PATH + project.getLocation();
+        final var gamaParams = request.getGamaParams();
 
         request.getExperiments().forEach(experimentReq -> {
             final var experimentResultNumber = experimentReq.getExperimentResultNumber();
-
             // Get experiment data from request.
             final var modelId = experimentReq.getModelId();
             final var experimentId = experimentReq.getId();
@@ -169,8 +169,16 @@ public class SimulationService implements ISimulationService {
             final var runLegacyCommand = gamaCommandBuilder.buildLegacy(null, pathToExperimentPlanXmlFile, pathToLocalExperimentOutputDir);
 
             // Execute legacy command.
-            executeLegacy(createXmlCommand, runLegacyCommand, pathToExperimentPlanXmlFile,
-                experimentReq.getExperiment(), finalStep, pathToLocalExperimentOutputDir, experimentReq.getExperimentResult());
+            executeLegacy(
+                createXmlCommand,
+                runLegacyCommand,
+                pathToExperimentPlanXmlFile,
+                experimentReq.getExperiment(),
+                finalStep,
+                pathToLocalExperimentOutputDir,
+                experimentReq.getExperimentResult(),
+                gamaParams
+            );
         });
     }
 
@@ -221,20 +229,22 @@ public class SimulationService implements ISimulationService {
         Experiment experiment,
         long finalStep,
         String pathToLocalExperimentOutputDir,
-        ExperimentResult experimentResult
+        ExperimentResult experimentResult,
+        Map<String, String> gamaParams
     ) {
         try {
             final var experimentId = experiment.getId();
             final var experimentName = experiment.getName();
             experimentResultService.updateStatus(experimentResult, ExperimentResultStatusConst.IN_PROGRESS);
-            final Map<String, String> params = Map.of(
-                "Run ID", experimentResult.getSimulationRunId().toString()
-            );
+
+            if (gamaParams != null) {
+                gamaParams.put("Run_id", experimentResult.getSimulationRunId().toString());
+            }
 
             virtualThreadExecutor.submit(() -> {
                 // Execute commands
                 final var executeCommandFuture = gamaCommandExecutor.executeLegacy(createXmlCommand, runLegacyCommand,
-                    pathToExperimentPlanXmlFile, experimentId, experimentName, finalStep, experimentResult, params);
+                    pathToExperimentPlanXmlFile, experimentId, experimentName, finalStep, experimentResult, gamaParams);
 
                 executeCommandFuture.whenComplete((executeCommandResult, executeCommandError) -> {
                     if (executeCommandError != null) {
@@ -248,7 +258,7 @@ public class SimulationService implements ISimulationService {
                     }
 
                     log.info("Simulation completed for experiment: {}", experimentId);
-                    clearLocalResource(pathToExperimentPlanXmlFile);
+//                    clearLocalResource(pathToExperimentPlanXmlFile);
                     // Sleep for 1 second to make sure all images are loaded.
                     try {
                         Thread.sleep(1000);

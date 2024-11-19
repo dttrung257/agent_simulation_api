@@ -141,4 +141,12 @@ public interface ExperimentResultRepository extends JpaRepository<ExperimentResu
     @Modifying
     @Query("DELETE FROM ExperimentResult er WHERE er.id IN :ids")
     void deleteByIds(@Param("ids") List<BigInteger> ids);
+
+    @Query(
+        value = """
+            SELECT er.simulationRunId FROM ExperimentResult er
+            WHERE er.id = :experiment_result_id
+        """
+    )
+    Integer getSimulationRunId(@Param("experiment_result_id") Integer experimentResultId);
 }

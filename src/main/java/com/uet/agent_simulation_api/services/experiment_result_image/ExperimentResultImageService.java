@@ -37,7 +37,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -367,9 +372,13 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
         String experimentResultIds,
         Integer startStep,
         Integer endStep,
-        long duration
+        long duration,
+        String categoryIds
     ) {
         final int CHUNK_SIZE = 10;
+        final var categoryIdsList = categoryIds == null ? null : Arrays.stream(categoryIds.split(","))
+                .map(BigInteger::new)
+                .toList();
 
         final List<BigInteger> experimentResultIdList = Arrays.stream(experimentResultIds.split(","))
                 .map(BigInteger::new)
@@ -416,7 +425,7 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
                         Flux<ExperimentResultImageListResponse> localImagesFlux = Flux.empty();
                         if (!localExperimentIds.isEmpty()) {
                             final List<ExperimentResultImage> allImages = experimentResultImageRepository
-                                    .findByRangeForMultipleExperiments(localExperimentIds, step, step, authService.getCurrentUserId());
+                                    .findByRangeForMultipleExperiments(localExperimentIds, step, step, authService.getCurrentUserId(), categoryIdsList);
 
                             final Map<BigInteger, List<ExperimentResultImage>> imagesByExperiment = allImages.stream()
                                     .collect(Collectors.groupingBy(ExperimentResultImage::getExperimentResultId));
@@ -450,7 +459,8 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
                                     step,
                                     step,
                                     duration,
-                                    experimentResult.getNodeId()
+                                    experimentResult.getNodeId(),
+                                    categoryIds
                                 );
                             });
 
@@ -504,9 +514,28 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
         Integer startStep,
         Integer endStep,
         long duration,
-        Integer nodeId
+        Integer nodeId,
+        String categoryIds
     ) {
         final var webClient = nodeService.getWebClientByNodeId(nodeId);
+
+        if (categoryIds == null) {
+            return webClient.get()
+                    .uri(uriBuilder -> uriBuilder.path("/api/v1/experiment_result_images/multi_experiment_animation")
+                            .queryParam("experiment_result_id", experimentResultId)
+                            .queryParam("start_step", startStep)
+                            .queryParam("end_step", endStep)
+                            .queryParam("animation", true)
+                            .queryParam("duration", duration)
+                            .build())
+                    .retrieve()
+                    .bodyToFlux(ExperimentResultImageListResponse.class)
+                    .onErrorResume(throwable -> {
+                        log.error("Error fetching animated images from node {}: {}", nodeId, throwable.getMessage());
+
+                        return Flux.just(new ExperimentResultImageListResponse(new ArrayList<>()));
+                    });
+        }
 
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/api/v1/experiment_result_images/multi_experiment_animation")
@@ -515,6 +544,7 @@ public class ExperimentResultImageService implements IExperimentResultImageServi
                     .queryParam("end_step", endStep)
                     .queryParam("animation", true)
                     .queryParam("duration", duration)
+                    .queryParam("category_ids", categoryIds)
                     .build())
                 .retrieve()
                 .bodyToFlux(ExperimentResultImageListResponse.class)

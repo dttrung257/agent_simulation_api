@@ -21,28 +21,44 @@ import com.uet.agent_simulation_api.repositories.NodeRepository;
 import com.uet.agent_simulation_api.repositories.ProjectRepository;
 import com.uet.agent_simulation_api.requests.experiment_result.NewExperimentResult;
 import com.uet.agent_simulation_api.requests.simulation.CreateClusterSimulationRequest;
+import com.uet.agent_simulation_api.requests.simulation.CreateExperimentRequest;
 import com.uet.agent_simulation_api.requests.simulation.CreateSimulationRequest;
+import com.uet.agent_simulation_api.requests.simulation.RunMultiSimulationRequest;
 import com.uet.agent_simulation_api.responses.ResponseHandler;
 import com.uet.agent_simulation_api.responses.SuccessResponse;
+import com.uet.agent_simulation_api.responses.simulation.RunMultiSimulationResponse;
 import com.uet.agent_simulation_api.responses.simulation.RunSimulationResponse;
 import com.uet.agent_simulation_api.services.auth.IAuthService;
+import com.uet.agent_simulation_api.services.experiment.IExperimentService;
 import com.uet.agent_simulation_api.services.experiment_result.IExperimentResultService;
+import com.uet.agent_simulation_api.services.model.IModelService;
 import com.uet.agent_simulation_api.services.multi_simulation.IMultiSimulationService;
 import com.uet.agent_simulation_api.services.node.INodeService;
+import com.uet.agent_simulation_api.services.project.ProjectService;
 import com.uet.agent_simulation_api.services.simulation.ISimulationRunService;
 import com.uet.agent_simulation_api.services.simulation.ISimulationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @RestController
 @Slf4j
@@ -51,11 +67,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class SimulationController {
     private final IAuthService authService;
     private final INodeService nodeService;
+    private final IModelService modelService;
+    private final ProjectService projectService;
     private final NodeRepository nodeRepository;
     private final ResponseHandler responseHandler;
     private final ModelRepository modelRepository;
     private final MessagePublisher messagePublisher;
     private final ProjectRepository projectRepository;
+    private final IExperimentService experimentService;
     private final ISimulationService simulationService;
     private final ExperimentRepository experimentRepository;
     private final ISimulationRunService simulationRunService;
@@ -189,10 +208,10 @@ public class SimulationController {
         return newExperimentResultList;
     }
 
-    private List<RunSimulationResponse> createNewExperimentResult(List<NewExperimentResult> newExperimentResultList, CreateClusterSimulationRequest request) {
+    private List<RunMultiSimulationResponse> createNewExperimentResult(List<NewExperimentResult> newExperimentResultList, CreateClusterSimulationRequest request) {
         final var simulationRun = simulationRunService.create();
 
-        final var resultIdList = new ArrayList<RunSimulationResponse>();
+        final var resultIdList = new ArrayList<RunMultiSimulationResponse>();
         final var experimentResultList = newExperimentResultList.stream()
             .map(newExperimentResult -> ExperimentResult.builder()
                 .experiment(newExperimentResult.experiment())
@@ -208,7 +227,16 @@ public class SimulationController {
         final var savedExperimentResultList = experimentResultRepository.saveAll(experimentResultList);
 
         request.getSimulationRequests().forEach(simulationRequest -> {
+            final var nodeName = nodeService.getNodeById(simulationRequest.getNodeId()).getName();
+            final var project = projectService.getProject(simulationRequest.getProjectId()).orElse(null);
+            final var projectName = project != null ? project.getName() : null;
+            final var title = simulationRequest.getGamaParams() == null ?
+                null : "Pigpen" + simulationRequest.getGamaParams().get("Pigpen_id");
+
             simulationRequest.getExperiments().forEach(experimentRequest -> {
+                final var modelName = modelService.getModel(experimentRequest.getModelId()).getName();
+                final var experimentName = experimentService.getExperiment(experimentRequest.getId()).getName();
+
                 final var experimentResultNumber = experimentRequest.getExperimentResultNumber();
                 final ExperimentResult experimentResult = savedExperimentResultList.stream()
                         .filter(result -> result.getNumber().equals(experimentResultNumber)
@@ -218,17 +246,110 @@ public class SimulationController {
                 final var experimentResultId = experimentResult != null ? experimentResult.getId() : null;
                 experimentRequest.setExperimentResult(experimentResult);
 
-                resultIdList.add(new RunSimulationResponse(
-                    simulationRequest.getNodeId(),
-                    simulationRequest.getProjectId(),
-                    experimentRequest.getModelId(),
-                    experimentRequest.getId(),
-                    experimentResultId,
-                    simulationRequest.getOrder())
+                resultIdList.add(
+                    new RunMultiSimulationResponse(
+                        simulationRequest.getNodeId(),
+                        simulationRequest.getProjectId(),
+                        experimentRequest.getModelId(),
+                        experimentRequest.getId(),
+                        experimentResultId,
+                        simulationRequest.getOrder(),
+                        nodeName,
+                        projectName,
+                        modelName,
+                        experimentName,
+                        title
+                    )
                 );
             });
         });
 
         return resultIdList;
+    }
+
+    @PostMapping("/cluster/multi_simulation")
+    public ResponseEntity<SuccessResponse> runMultiSimulation(@Valid @RequestBody RunMultiSimulationRequest request) {
+        final var createSimulationRequest = prepareDataForRunMultiSimulation(request);
+
+        return runSimulationCluster(createSimulationRequest);
+    }
+
+    private CreateClusterSimulationRequest prepareDataForRunMultiSimulation(RunMultiSimulationRequest request) {
+        final var finalStep = request.getFinalStep();
+        final var numberPigpen = request.getNumberPigpen();
+        final var numberPigs = request.getNumberPigs();
+        final var initDiseaseAppearPigpenIdList = request.getInitDiseaseAppearPigpenIds().split(",");
+        final var initDiseaseAppearDays = request.getInitDiseaseAppearDays().split(",");
+        final Map<String, String> diseaseAppearMap = IntStream.range(0, initDiseaseAppearPigpenIdList.length)
+                .boxed()
+                .collect(Collectors.toMap(
+                        i -> initDiseaseAppearPigpenIdList[i],
+                        i -> initDiseaseAppearDays[i]
+                ));
+
+        final var pigCounts = Arrays.stream(numberPigs.split(","))
+                .map(Integer::parseInt)
+                .toList();
+        final var pigIdList = new ArrayList<String>();
+        int currentPigId = 1;
+        for (Integer pigCount : pigCounts) {
+            List<String> pigIds = new ArrayList<>();
+            for (int i = 0; i < pigCount; i++) {
+                pigIds.add(String.valueOf(currentPigId));
+                currentPigId++;
+            }
+            pigIdList.add(String.join(",", pigIds));
+        }
+
+        final var pigpenIds = IntStream.rangeClosed(1, numberPigpen).boxed().toList();
+        final var neighborIds = new ArrayList<String>();
+        for (int i = 0; i < pigpenIds.size(); i++) {
+            List<String> neighbors = new ArrayList<>();
+
+            if (i > 0) {
+                neighbors.add(String.valueOf(pigpenIds.get(i - 1)));
+            }
+
+            if (i < pigpenIds.size() - 1) {
+                neighbors.add(String.valueOf(pigpenIds.get(i + 1)));
+            }
+
+            neighborIds.add(String.join(",", neighbors));
+        }
+
+        final var allNodeIdList = nodeService.getAllNodeIds();
+        final var distributedNodeIds = IntStream.range(0, pigpenIds.size())
+                .mapToObj(i -> Integer.parseInt(String.valueOf(allNodeIdList.get(i % allNodeIdList.size()))))
+                .toList();
+
+        final String allPigpenIdsString = pigpenIds.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+
+        final List<CreateSimulationRequest> simulationRequests = new ArrayList<>();
+        for (int i = 0; i < pigpenIds.size(); i++) {
+            final Map<String, String> gamaParams = new HashMap<>();
+            gamaParams.put("Pigpen_id", String.valueOf(pigpenIds.get(i)));
+            gamaParams.put("Neighbor_ids", neighborIds.get(i));
+            gamaParams.put("All_pigpen_ids", allPigpenIdsString);
+            gamaParams.put("Pig_ids", pigIdList.get(i));
+            gamaParams.put("Init_disease_appear_day", diseaseAppearMap.getOrDefault(String.valueOf(pigpenIds.get(i)), "-1"));
+
+            final var experimentRequest = new CreateExperimentRequest();
+            experimentRequest.setId(BigInteger.valueOf(8));
+            experimentRequest.setModelId(BigInteger.valueOf(47));
+            experimentRequest.setFinalStep(Long.valueOf(finalStep));
+
+            final var simulationRequest = new CreateSimulationRequest();
+            simulationRequest.setNodeId(distributedNodeIds.get(i));
+            simulationRequest.setProjectId(BigInteger.valueOf(2));
+            simulationRequest.setOrder(i + 1);
+            simulationRequest.setGamaParams(gamaParams);
+            simulationRequest.setExperiments(List.of(experimentRequest));
+
+            simulationRequests.add(simulationRequest);
+        }
+
+        return new CreateClusterSimulationRequest(simulationRequests);
     }
 }

@@ -88,4 +88,12 @@ public class ExperimentResultController {
 
         return responseHandler.respondSuccess("OK");
     }
+
+    @GetMapping("/show-statistics")
+    public ResponseEntity<SuccessResponse> showStatistics(
+        @RequestParam(name = "experiment_result_id") String experimentResultIds
+    ) {
+//        return responseHandler.respondSuccess(experimentResultService.showStatistics());
+        return null;
+    }
 }

@@ -2,18 +2,23 @@ spring:
   profiles:
     active: local
   application:
-    name: agent-simulation-api
+    name: ags-api
   threads:
     virtual:
       enabled: true
 
+webflux:
+  body:
+    max_size_mb: 10
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    metrics:
+      enabled: true
+
 app:
   timezone: UTC+7
-
-gama:
-  path:
-    shell: /opt/gama-platform/headless/gama-headless.sh
-
-cluster:
-  config:
-    path: src/main/resources/cluster-config.yml

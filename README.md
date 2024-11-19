@@ -59,13 +59,16 @@ See at storage/logs/spring.log
 
 ## Insert master data
 ```
-docker exec -i agent_simulation_local_db mysql -uagsxuser -pagspassword agent_simulation < ./src/main/resources/db/sql/master_data_local.sql
-docker exec -i agent_simulation_local_db mysql -uagsuser -pagspassword agent_simulation < ./src/main/resources/db/sql/import-pig-farm-multi-simulation-project.sql
-docker exec -i agent_simulation_local_db mysql -uagsuser -pagspassword agent_simulation < ./src/main/resources/db/sql/import-klinh-pig-farm-emission-project.sql
-docker exec -i agent_simulation_local_db mysql -uagsuser -pagspassword agent_simulation < ./src/main/resources/db/sql/import-dhung-pig-farm-env-project.sql
+docker exec -i ags_local_db mysql -uagsuser -p123 ags < ./src/main/resources/db/sql/master_data_local.sql
+docker exec -i ags_local_db mysql -uagsuser -p123 ags < ./src/main/resources/db/sql/import-pig-farm-multi-simulation-project.sql
+docker exec -i ags_local_db mysql -uagsuser -p123 ags < ./src/main/resources/db/sql/import-klinh-pig-farm-emission-project.sql
+docker exec -i ags_local_db mysql -uagsuser -p123 ags < ./src/main/resources/db/sql/import-dhung-pig-farm-env-project.sql
 
-docker exec -i agent_simulation_dev_db mysql -uagsuser -p2MKf2apdFvdSgFxiIxCt agent_simulation < ./src/main/resources/db/sql/master_data_dev.sql
-docker exec -i agent_simulation_dev_db mysql -uagsuser -p2MKf2apdFvdSgFxiIxCt agent_simulation < ./src/main/resources/db/sql/import-pig-farm-multi-simulation-project.sql
-docker exec -i agent_simulation_dev_db mysql -uagsuser -p2MKf2apdFvdSgFxiIxCt agent_simulation < ./src/main/resources/db/sql/import-klinh-pig-farm-emission-project.sql
-docker exec -i agent_simulation_dev_db mysql -uagsuser -p2MKf2apdFvdSgFxiIxCt agent_simulation < ./src/main/resources/db/sql/import-dhung-pig-farm-env-project.sql
+docker exec -i ags_dev_db mysql -uagsuser -pmysql123456 ags < ./src/main/resources/db/sql/master_data_dev.sql
+docker exec -i ags_dev_db mysql -uagsuser -pmysql123456 ags < ./src/main/resources/db/sql/import-pig-farm-multi-simulation-project.sql
+docker exec -i ags_dev_db mysql -uagsuser -pmysql123456 ags < ./src/main/resources/db/sql/import-klinh-pig-farm-emission-project.sql
+docker exec -i ags_dev_db mysql -uagsuser -pmysql123456 ags < ./src/main/resources/db/sql/import-dhung-pig-farm-env-project.sql
+
+rm -rf /Users/trungdt/Workspaces/uet/agent_simulation/gama/outputs/**
+rm -rf /Users/trungdt/Workspaces/uet/agent_simulation/gama/xmls/**
 ```

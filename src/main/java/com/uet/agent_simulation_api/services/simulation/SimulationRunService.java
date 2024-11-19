@@ -7,14 +7,14 @@ import com.uet.agent_simulation_api.models.projections.SimulationRunProjection;
 import com.uet.agent_simulation_api.pubsub.PubSubCommands;
 import com.uet.agent_simulation_api.pubsub.message.master.simulation.DeleteSimulationResult;
 import com.uet.agent_simulation_api.pubsub.publisher.MessagePublisher;
-import com.uet.agent_simulation_api.repositories.ExperimentResultRepository;
-import com.uet.agent_simulation_api.repositories.SimulationRunRepository;
+import com.uet.agent_simulation_api.repositories.*;
 import com.uet.agent_simulation_api.responses.simulation.SimulationDetailResponse;
 import com.uet.agent_simulation_api.responses.simulation.SimulationHistoryResponse;
 import com.uet.agent_simulation_api.services.auth.IAuthService;
 import com.uet.agent_simulation_api.services.node.INodeService;
 import com.uet.agent_simulation_api.utils.FileUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
@@ -31,8 +31,14 @@ public class SimulationRunService implements ISimulationRunService {
     private final IAuthService authService;
     private final INodeService nodeService;
     private final MessagePublisher messagePublisher;
+    private final PigpenDailyRepository pigpenDailyRepository;
     private final SimulationRunRepository simulationRunRepository;
+    private final PigpenSyncRunRepository pigpenSyncRunRepository;
     private final ExperimentResultRepository experimentResultRepository;
+    private final PigDataDailyRepository pigDataDailyRepository;
+
+    @Value("${gama.path.xml}")
+    private String experimentPlanXmlLocation;
 
     @Override
     public SimulationRun create() {
@@ -97,12 +103,17 @@ public class SimulationRunService implements ISimulationRunService {
                     .build());
             }
 
+            final var folderName = er.getLocation().substring(er.getLocation().lastIndexOf("/") + 1);
             fileUtil.delete(er.getLocation());
             fileUtil.delete(er.getLocation() + ".zip");
+            fileUtil.delete(experimentPlanXmlLocation + "/" + folderName + ".xml");
             currentNodeExperimentResultIdList.add(er.getId());
         });
 
         experimentResultRepository.deleteByIds(currentNodeExperimentResultIdList);
+        pigpenSyncRunRepository.deleteByRunId(simulationRun.getId().intValue());
+        pigpenDailyRepository.deleteByRunId(simulationRun.getId().intValue());
+        pigDataDailyRepository.deleteByRunId(simulationRun.getId().intValue());
         simulationRunRepository.delete(simulationRun);
     }
 }

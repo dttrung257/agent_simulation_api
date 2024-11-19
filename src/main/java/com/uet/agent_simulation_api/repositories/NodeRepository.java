@@ -12,4 +12,7 @@ public interface NodeRepository extends JpaRepository<Node, Integer> {
 
     @Query("SELECT n FROM Node n")
     List<Node> find();
+
+    @Query("SELECT n.id FROM Node n")
+    List<Integer> getAllNodeIds();
 }
