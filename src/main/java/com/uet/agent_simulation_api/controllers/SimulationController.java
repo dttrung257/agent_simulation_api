@@ -126,24 +126,24 @@ public class SimulationController {
         final var newExperimentResultList = prepareForRunSimulationInCluster(request);
 
         // Create new experiment results
-        final var resultIdList = createNewExperimentResult(newExperimentResultList, request);;
+        final var resultIdList = createNewExperimentResult(newExperimentResultList, request);
 
-        final var currentNodeSimulationRequests = new ArrayList<CreateSimulationRequest>();
-        // Run simulations in cluster
-        request.getSimulationRequests().forEach((simulationRequest) -> {
-            if (simulationRequest.getNodeId().equals(nodeService.getCurrentNodeId())) {
-                currentNodeSimulationRequests.add(simulationRequest);
-            } else {
-                final var message = RunSimulation.builder()
-                        .nodeId(simulationRequest.getNodeId())
-                        .command(PubSubCommands.RUN_SIMULATION)
-                        .simulation(simulationRequest)
-                        .build();
+        // Run simulations on current node first
+        request.getSimulationRequests().stream()
+                .filter(simulationRequest -> simulationRequest.getNodeId().equals(nodeService.getCurrentNodeId()))
+                .forEach(simulationService::run);
 
-                messagePublisher.publish(message);
-            }
-        });
-        currentNodeSimulationRequests.forEach(simulationService::run);
+        // Then publish messages to other nodes
+        request.getSimulationRequests().stream()
+                .filter(simulationRequest -> !simulationRequest.getNodeId().equals(nodeService.getCurrentNodeId()))
+                .forEach(simulationRequest -> {
+                    final var message = RunSimulation.builder()
+                            .nodeId(simulationRequest.getNodeId())
+                            .command(PubSubCommands.RUN_SIMULATION)
+                            .simulation(simulationRequest)
+                            .build();
+                    messagePublisher.publish(message);
+                });
 
         return responseHandler.respondSuccess(resultIdList);
     }
@@ -287,6 +287,11 @@ public class SimulationController {
                         i -> initDiseaseAppearDays[i]
                 ));
 
+        final var experiment = experimentRepository.findByModelName("multi-simulator");
+        final var experimentId = experiment.getId();
+        final var modelId = experiment.getModelId();
+        final var projectId = experiment.getProjectId();
+
         final var pigCounts = Arrays.stream(numberPigs.split(","))
                 .map(Integer::parseInt)
                 .toList();
@@ -336,13 +341,13 @@ public class SimulationController {
             gamaParams.put("Init_disease_appear_day", diseaseAppearMap.getOrDefault(String.valueOf(pigpenIds.get(i)), "-1"));
 
             final var experimentRequest = new CreateExperimentRequest();
-            experimentRequest.setId(BigInteger.valueOf(8));
-            experimentRequest.setModelId(BigInteger.valueOf(47));
+            experimentRequest.setId(experimentId);
+            experimentRequest.setModelId(modelId);
             experimentRequest.setFinalStep(Long.valueOf(finalStep));
 
             final var simulationRequest = new CreateSimulationRequest();
             simulationRequest.setNodeId(distributedNodeIds.get(i));
-            simulationRequest.setProjectId(BigInteger.valueOf(2));
+            simulationRequest.setProjectId(projectId);
             simulationRequest.setOrder(i + 1);
             simulationRequest.setGamaParams(gamaParams);
             simulationRequest.setExperiments(List.of(experimentRequest));

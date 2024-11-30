@@ -34,4 +34,13 @@ public interface ExperimentRepository extends JpaRepository<Experiment, BigInteg
         @Param("project_id") BigInteger projectId,
         @Param("model_id") BigInteger modelId
     );
+
+    @Query(
+        value = """
+            SELECT e FROM Experiment e
+            JOIN Model m ON e.modelId = m.id
+            WHERE m.name LIKE %:name%
+        """
+    )
+    Experiment findByModelName(@Param("name") String name);
 }

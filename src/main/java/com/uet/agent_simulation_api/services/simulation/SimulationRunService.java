@@ -36,6 +36,7 @@ public class SimulationRunService implements ISimulationRunService {
     private final PigpenSyncRunRepository pigpenSyncRunRepository;
     private final ExperimentResultRepository experimentResultRepository;
     private final PigDataDailyRepository pigDataDailyRepository;
+    private final SimulationMetricRepository simulationMetricRepository;
 
     @Value("${gama.path.xml}")
     private String experimentPlanXmlLocation;
@@ -114,6 +115,7 @@ public class SimulationRunService implements ISimulationRunService {
         pigpenSyncRunRepository.deleteByRunId(simulationRun.getId().intValue());
         pigpenDailyRepository.deleteByRunId(simulationRun.getId().intValue());
         pigDataDailyRepository.deleteByRunId(simulationRun.getId().intValue());
+        simulationMetricRepository.deleteBySimulationRunId(simulationRun.getId());
         simulationRunRepository.delete(simulationRun);
     }
 }

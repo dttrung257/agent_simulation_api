@@ -29,7 +29,7 @@ VALUES
     (44, 'trough', 2, 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
     (45, 'water-disease-config', 2, 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
     (46, 'water-disease-factor', 2, 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
-    (47, 'pigpen-1-parallel', 2, 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
+    (47, 'multi-simulator', 2, 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
     (48, 'pigpen-2-parallel', 2, 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
     (49, 'pigpen-3-parallel', 2, 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
     (50, 'pigpen-1-distributed', 2, 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
@@ -39,10 +39,11 @@ VALUES
     (54, 'pigpen-5-distributed', 2, 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
     (55, 'pigpen-6-distributed', 2, 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn');
 
+
 INSERT INTO experiments
 (id, name, model_id, project_id, user_id, created_at, updated_at, created_by, updated_by)
 VALUES
-    (8, 'Pigpen1', 47, 2, 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
+    (8, 'MultiSimulation', 47, 2, 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
     (9, 'Pigpen2', 48, 2, 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
     (10, 'Pigpen3', 49, 2, 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
     (11, 'Pigpen1', 50, 2, 1, '2024-09-01 10:30:00', '2024-09-01 10:30:00', 'admin@uet.vn', 'admin@uet.vn'),
