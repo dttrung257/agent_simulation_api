@@ -241,7 +241,7 @@ public class GamaCommandExecutor implements IGamaCommandExecutor {
             xmlContent = xmlContent.replaceFirst("finalStep=\"[^\"]*\"", "finalStep=\"" + finalStep + "\"");
             xmlContent = xmlContent.replaceFirst("id=\"[^\"]*\"", "id=\"" + experimentId + "\"");
             xmlContent = xmlContent.replaceAll("framerate=\"[^\"]*\"", "framerate=\"" + GAMA_FRAME_RATE + "\"");
-//            xmlContent = xmlContent.replaceAll("seed=\"[^\"]*\"", "seed=\"" + seed + "\"");
+            xmlContent = xmlContent.replaceAll("seed=\"[^\"]*\"", "seed=\"" + seed + "\"");
 
             if (params != null) {
                 for (Map.Entry<String, String> entry : params.entrySet()) {
