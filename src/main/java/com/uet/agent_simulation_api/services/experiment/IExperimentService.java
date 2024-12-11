@@ -14,4 +14,12 @@ public interface IExperimentService {
      * @return List<Experiment>
      */
     List<Experiment> get(BigInteger projectId, BigInteger modelId);
+
+    /**
+     * This method is used to get an experiment by id.
+     *
+     * @param experimentId
+     * @return Experiment
+     */
+    Experiment getExperiment(BigInteger experimentId);
 }

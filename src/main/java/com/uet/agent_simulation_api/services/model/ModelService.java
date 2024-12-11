@@ -1,5 +1,7 @@
 package com.uet.agent_simulation_api.services.model;
 
+import com.uet.agent_simulation_api.exceptions.errors.ModelErrors;
+import com.uet.agent_simulation_api.exceptions.model.ModelNotFoundException;
 import com.uet.agent_simulation_api.models.Model;
 import com.uet.agent_simulation_api.repositories.ModelRepository;
 import com.uet.agent_simulation_api.services.auth.IAuthService;
@@ -22,5 +24,12 @@ public class ModelService implements IModelService {
         }
 
         return modelRepository.find(authService.getCurrentUserId(), projectId);
+    }
+
+    @Override
+    public Model getModel(BigInteger modelId) {
+        return modelRepository.findById(modelId).orElseThrow(
+            () -> new ModelNotFoundException(ModelErrors.E_MODEL_0001.defaultMessage())
+        );
     }
 }

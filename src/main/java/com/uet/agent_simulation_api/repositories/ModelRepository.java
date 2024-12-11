@@ -46,4 +46,12 @@ public interface ModelRepository extends JpaRepository<Model, BigInteger> {
         @Param("user_id") BigInteger userId,
         @Param("project_id") BigInteger projectId
     );
+
+    @Query(
+        value = """
+            SELECT m FROM Model m
+            WHERE m.name LIKE %:name%
+        """
+    )
+    Model findByName(@Param("name") String name);
 }

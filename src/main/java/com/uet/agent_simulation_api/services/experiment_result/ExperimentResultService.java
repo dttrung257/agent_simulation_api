@@ -17,9 +17,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -128,10 +129,6 @@ public class ExperimentResultService implements IExperimentResultService {
     private ExperimentProgressResponse getExperimentProgressFromNode(BigInteger resultId, Integer nodeId) {
         final var webClient = nodeService.getWebClientByNodeId(nodeId);
 
-        return fetchExperimentProgress(webClient, resultId);
-    }
-
-    private ExperimentProgressResponse fetchExperimentProgress(WebClient webClient, BigInteger resultId) {
         try {
             final var response = webClient.get().uri("/api/v1/experiment_results/" + resultId + "/progress")
                     .retrieve().bodyToMono(ExperimentProgressResponse.class).block();
@@ -206,5 +203,17 @@ public class ExperimentResultService implements IExperimentResultService {
     @Override
     public BigInteger getLastExperimentResultNumber(BigInteger experimentId) {
         return experimentResultRepository.getLastExperimentResultNumber(experimentId, authService.getCurrentUserId());
+    }
+
+    @Override
+    public void delete(BigInteger id) {
+        final var experimentResult = experimentResultRepository.findById(id);
+        if (experimentResult.isEmpty()) {
+            return;
+        }
+
+        fileUtil.delete(experimentResult.get().getLocation());
+        fileUtil.delete(experimentResult.get().getLocation() + ".zip");
+        experimentResultRepository.delete(experimentResult.get());
     }
 }

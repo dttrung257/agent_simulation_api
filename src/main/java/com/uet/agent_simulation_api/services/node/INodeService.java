@@ -38,4 +38,11 @@ public interface INodeService {
      * @return WebClient
      */
     WebClient getWebClientByNodeId(Integer nodeId);
+
+    /**
+     * This method is used to get all node ids.
+     *
+     * @return List<Integer>
+     */
+    List<Integer> getAllNodeIds();
 }

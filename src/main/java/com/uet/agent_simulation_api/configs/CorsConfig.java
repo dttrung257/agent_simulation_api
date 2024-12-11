@@ -1,4 +1,4 @@
-package com.uet.agent_simulation_api.config;
+package com.uet.agent_simulation_api.configs;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -18,9 +18,9 @@ public class CorsConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         switch (profile) {
             case "local", "dev" -> registry.addMapping("/api/**")
-                    .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
-                    .allowedOrigins("*")
-                    .allowedHeaders("*");
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
+                        .allowedOrigins("*")
+                        .allowedHeaders("*");
         }
     }
 

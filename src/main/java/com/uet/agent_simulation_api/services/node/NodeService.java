@@ -81,4 +81,9 @@ public class NodeService implements INodeService {
     private String getNodeUrl(Node node) {
         return "http://" + node.getHost() + ":" + node.getPort();
     }
+
+    @Override
+    public List<Integer> getAllNodeIds() {
+        return nodeRepository.getAllNodeIds();
+    }
 }

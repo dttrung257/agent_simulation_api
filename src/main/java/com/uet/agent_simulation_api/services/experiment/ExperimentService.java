@@ -1,5 +1,7 @@
 package com.uet.agent_simulation_api.services.experiment;
 
+import com.uet.agent_simulation_api.exceptions.errors.ExperimentErrors;
+import com.uet.agent_simulation_api.exceptions.experiment.ExperimentNotFoundException;
 import com.uet.agent_simulation_api.models.Experiment;
 import com.uet.agent_simulation_api.repositories.ExperimentRepository;
 import com.uet.agent_simulation_api.services.auth.IAuthService;
@@ -18,5 +20,12 @@ public class ExperimentService implements IExperimentService {
     @Override
     public List<Experiment> get(BigInteger projectId, BigInteger modelId) {
         return experimentRepository.find(authService.getCurrentUserId(), projectId, modelId);
+    }
+
+    @Override
+    public Experiment getExperiment(BigInteger experimentId) {
+        return experimentRepository.findById(experimentId).orElseThrow(
+            () -> new ExperimentNotFoundException(ExperimentErrors.E_EXP_0001.defaultMessage())
+        );
     }
 }

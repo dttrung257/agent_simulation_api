@@ -1,7 +1,9 @@
 package com.uet.agent_simulation_api.repositories;
 
 import com.uet.agent_simulation_api.models.ExperimentResult;
+import com.uet.agent_simulation_api.models.ExperimentResultImage;
 import com.uet.agent_simulation_api.models.projections.ExperimentResultDetailProjection;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -121,4 +123,30 @@ public interface ExperimentResultRepository extends JpaRepository<ExperimentResu
         @Param("experiment_id") BigInteger experimentId,
         @Param("user_id") BigInteger userId
     );
+
+    @Query(
+        value = """
+            SELECT er FROM ExperimentResult er
+            WHERE er.simulationRunId = :simulation_run_id
+        """
+    )
+    List<ExperimentResult> findBySimulationRunId(@Param("simulation_run_id") BigInteger simulationRunId);
+
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM ExperimentResult er WHERE er.simulationRunId = :simulation_run_id")
+    void deleteBySimulationRunId(@Param("simulation_run_id") BigInteger simulationRunId);
+
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM ExperimentResult er WHERE er.id IN :ids")
+    void deleteByIds(@Param("ids") List<BigInteger> ids);
+
+    @Query(
+        value = """
+            SELECT er.simulationRunId FROM ExperimentResult er
+            WHERE er.id = :experiment_result_id
+        """
+    )
+    Integer getSimulationRunId(@Param("experiment_result_id") Integer experimentResultId);
 }

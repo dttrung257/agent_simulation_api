@@ -86,6 +86,7 @@ public interface IExperimentResultImageService {
         String experimentResultIds,
         Integer startStep,
         Integer endStep,
-        long duration
+        long duration,
+        String categoryIds
     );
 }

@@ -12,4 +12,12 @@ public interface IModelService {
      * @return List<Model>
      */
     List<Model> get(BigInteger projectId, Boolean hasExperiment);
+
+    /**
+     * This method is used to get a model by id.
+     *
+     * @param modelId
+     * @return Model
+     */
+    Model getModel(BigInteger modelId);
 }
