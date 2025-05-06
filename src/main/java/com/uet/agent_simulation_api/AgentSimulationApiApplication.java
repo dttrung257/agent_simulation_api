@@ -78,7 +78,7 @@ public class AgentSimulationApiApplication implements CommandLineRunner {
 		}
 
 		if (nodeId.isEmpty()) {
-			log.info("Node ID undefined in application.yml. Start setting node ID");
+			log.info("Node ID undefined in cluster config file. Start setting node ID");
 
 			fileUtil.findAndWrite(clusterConfigPath, "node_id", "1");
 			fileUtil.findAndWrite(clusterConfigPath, "node_role", "1");
@@ -88,7 +88,7 @@ public class AgentSimulationApiApplication implements CommandLineRunner {
 		try {
 			Integer.parseInt(nodeId);
 		} catch (NumberFormatException e) {
-			log.error("Invalid node ID in application.yml. Node ID must be an integer");
+			log.error("Invalid node ID in cluster config file. Node ID must be an integer");
 
 			return false;
 		}
