@@ -37,10 +37,10 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
   data:
     redis:
-      host: ${SPRING_REDIS_HOST:redis}
-      port: ${SPRING_REDIS_PORT:6379}
-      password: ${SPRING_REDIS_PASSWORD}
-      database: ${SPRING_REDIS_DATABASE:0}
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD}
+      database: ${SPRING_DATA_REDIS_DATABASE:0}
 
 server:
   port: ${SERVER_PORT:8080}
@@ -51,7 +51,7 @@ cluster:
 
 webflux:
   body:
-    max-size-mb: ${WEBFLUX_BODY_MAX_SIZE_MB:10}
+    max_size_mb: ${WEBFLUX_BODY_MAX_SIZE_MB:10}
 
 management:
   endpoints:

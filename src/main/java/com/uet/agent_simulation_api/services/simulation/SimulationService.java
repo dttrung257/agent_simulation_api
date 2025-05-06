@@ -303,7 +303,8 @@ public class SimulationService implements ISimulationService {
 
             log.info("Successfully clear old output directory: {}", dir);
         } catch (Exception e) {
-            throw new CannotClearOldSimulationOutputException(e.getMessage());
+//            throw new CannotClearOldSimulationOutputException(e.getMessage());
+            log.error("Error while clearing old output directory: {}", dir);
         }
     }
 
