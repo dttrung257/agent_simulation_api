@@ -62,35 +62,6 @@
     ```
     docker --version
     ```
-- Nginx
-    ```
-    upstream api_group {
-        server localhost:8080;
-    }
-
-    server {
-        listen 80;
-        listen [::]:80;
-        server_name localhost;
-
-        root /var/www/html/agent_simulation_frontend/build;
-
-        location /api/ {
-            proxy_pass http://api_group;
-            proxy_redirect off;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header Host $http_host;
-            proxy_set_header X-NginX-Proxy true;
-            client_max_body_size 11M;
-        }
-
-        location / {
-            try_files $uri $uri/ /index.html =404;
-        }
-    }
-    ```
-
 - Deploy
     ```
     cd /var/www/html/agent_simulation_api
@@ -140,3 +111,112 @@
     ```
     docker compose down api; docker compose up api -d; docker logs -f ags_dev_api
     ```
+
+## 2. Frontend
+- Clone source code project frontend:
+```
+    cd /var/www/html
+    git clone https://github.com/dttrung257/agent_simulation_frontend
+    cd /var/www/html/agent_simulation_frontend
+    git checkout develop
+```
+
+Install nvm:
+```
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+
+```
+
+```
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+```
+
+```
+nvm install 20
+```
+
+```
+nvm use v20
+```
+
+Create .env file:
+```
+vi /var/www/html/agent_simulation_frontend/.env
+```
+
+```
+REACT_APP_API_URL=http://<ip_master>/api/v1
+# REACT_APP_API_KEY=eyJhbGciOiJIUzUxMiJ9...
+```
+
+Build:
+```
+npm install
+npm run build
+```
+
+- Move build to var/www/html:
+```
+mv /var/www/html/agent_simulation_frontend/build /var/www/html/
+```
+
+
+Nginx
+Create config file
+```
+vi /etc/nginx/sites-available/ags
+```
+
+- Nginx
+```
+upstream api_group {
+    server localhost:8080;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name localhost;
+
+    root /var/www/html/build;
+
+    location /api/ {
+        proxy_pass http://api_group;
+        proxy_redirect off;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-NginX-Proxy true;
+        client_max_body_size 11M;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html =404;
+    }
+}
+```
+
+```
+cd /etc/nginx/sites-enabled
+rm default
+```
+
+```
+ln -s /etc/nginx/sites-available/ags /etc/nginx/sites-enabled/ags
+```
+
+```
+nginx -t
+```
+
+```
+nginx -s reload
+```
+
+Run script to insert data to database:
+```
+chmod +x scripts/import_project.sh
+./scripts/import_project.sh
+```
